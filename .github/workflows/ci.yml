@@ -1,0 +1,270 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [published]
+
+jobs:
+  test:
+    name: Test Suite
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          
+      - name: Install Poetry
+        run: pipx install poetry
+        
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+          
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-ansi --extras "all"
+        
+      - name: Run tests
+        run: |
+          poetry run pytest -v --tb=short --cov=src --cov-report=xml --cov-report=term-missing
+          
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install Poetry
+        run: pipx install poetry
+        
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-ansi --extras "all"
+        
+      - name: Format check (Black)
+        run: poetry run black --check --diff .
+        
+      - name: Import sorting (isort)
+        run: poetry run isort --check-only --diff .
+        
+      - name: Linting (Ruff)
+        run: poetry run ruff check . --output-format=github
+        
+      - name: Type checking (MyPy)
+        run: poetry run mypy --show-error-codes --pretty
+        
+      - name: Security scan (Bandit)
+        run: poetry run bandit -r src/ -f json -o bandit-report.json || true
+        
+      - name: Upload Bandit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
+  cli-test:
+    name: CLI Integration Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install Poetry
+        run: pipx install poetry
+        
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-ansi --extras "all"
+        
+      - name: Test CLI installation
+        run: |
+          poetry run pip install -e .
+          poetry run data-quality --help
+          
+      - name: Test CLI with SQLite
+        run: |
+          # Create test database
+          sqlite3 test.db "CREATE TABLE users (id INTEGER PRIMARY KEY, email TEXT, user_id INTEGER);"
+          sqlite3 test.db "INSERT INTO users VALUES (1, NULL, 100), (2, 'test@example.com', NULL);"
+          
+          # Test CLI commands
+          poetry run data-quality check --database-url sqlite:///test.db
+          poetry run data-quality analyze --database-url sqlite:///test.db --table users
+          poetry run data-quality nulls --database-url sqlite:///test.db
+          
+      - name: Test CLI with MySQL (using Docker)
+        run: |
+          # Start MySQL container
+          docker run --name mysql-test -e MYSQL_ROOT_PASSWORD=testpass -e MYSQL_DATABASE=testdb -p 3306:3306 -d mysql:8.0
+          
+          # Wait for MySQL to be ready
+          sleep 30
+          
+          # Create test data
+          docker exec mysql-test mysql -uroot -ptestpass testdb -e "
+            CREATE TABLE users (id INT PRIMARY KEY, email VARCHAR(255), user_id INT);
+            INSERT INTO users VALUES (1, NULL, 100), (2, 'test@example.com', NULL);
+          "
+          
+          # Test CLI with MySQL
+          poetry run data-quality check --database-url mysql://root:testpass@localhost:3306/testdb
+          
+          # Cleanup
+          docker stop mysql-test
+          docker rm mysql-test
+
+  performance:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install Poetry
+        run: pipx install poetry
+        
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-ansi --extras "all"
+        
+      - name: Run performance benchmarks
+        run: |
+          poetry run python -c "
+          from data_quality import health_check, scan_nulls
+          import sqlite3
+          import time
+          
+          # Create large test database
+          conn = sqlite3.connect('large_test.db')
+          conn.execute('CREATE TABLE large_table (id INTEGER PRIMARY KEY, email TEXT, user_id INTEGER, isrc TEXT)')
+          
+          # Insert 10k rows with some nulls
+          for i in range(10000):
+              email = f'user{i}@test.com' if i % 10 != 0 else None
+              user_id = i if i % 15 != 0 else None
+              isrc = f'USRC{i:06d}' if i % 20 != 0 else None
+              conn.execute('INSERT INTO large_table VALUES (?, ?, ?, ?)', (i, email, user_id, isrc))
+          
+          conn.commit()
+          conn.close()
+          
+          # Benchmark null scanning
+          start = time.perf_counter()
+          issues = scan_nulls('sqlite:///large_test.db')
+          scan_time = time.perf_counter() - start
+          
+          print(f'✅ Null scan completed in {scan_time:.2f}s for 10k rows')
+          print(f'✅ Found {len(issues)} null issues')
+          print(f'✅ Performance: {10000/scan_time:.0f} rows/second')
+          
+          # Benchmark health check
+          start = time.perf_counter()
+          report = health_check('sqlite:///large_test.db')
+          health_time = time.perf_counter() - start
+          
+          print(f'✅ Health check completed in {health_time:.2f}s')
+          print(f'✅ Found {report.total_issues} total issues')
+          
+          # Performance regression check
+          if scan_time > 5.0:  # Should scan 10k rows in under 5 seconds
+              print('⚠️  Performance regression detected!')
+              exit(1)
+          "
+
+  build:
+    name: Build Package
+    runs-on: ubuntu-latest
+    needs: [test, quality]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install Poetry
+        run: pipx install poetry
+        
+      - name: Build package
+        run: poetry build
+        
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: [test, quality, build, cli-test, performance]
+    if: github.event_name == 'release' && github.event.action == 'published'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install Poetry
+        run: pipx install poetry
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          
+      - name: Publish to PyPI
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
+        run: poetry publish --no-interaction
