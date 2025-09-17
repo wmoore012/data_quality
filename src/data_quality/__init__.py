@@ -6,6 +6,13 @@ from .schema_analyzer import (
     SchemaAnalysis,
     SchemaRecommendation,
 )
+from .benchmarks import (
+    benchmark_scan_speed,
+    benchmark_memory_usage,
+    benchmark_accuracy,
+    run_comprehensive_benchmarks,
+    BenchmarkResult,
+)
 
 __all__ = [
     "quick_null_scan",
@@ -18,4 +25,9 @@ __all__ = [
     "suggest_improvements",
     "SchemaAnalysis",
     "SchemaRecommendation",
+    "benchmark_scan_speed",
+    "benchmark_memory_usage", 
+    "benchmark_accuracy",
+    "run_comprehensive_benchmarks",
+    "BenchmarkResult",
 ]

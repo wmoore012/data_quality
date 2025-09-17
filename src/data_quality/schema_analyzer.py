@@ -702,3 +702,162 @@ def _estimate_normalization_level(engine: Engine, table: str) -> int:
 
     except SQLAlchemyError:
         return 3  # Assume normalized if can't analyze
+
+
+def _get_ai_recommendations(
+    database_url: str, 
+    tables: List[str], 
+    user_preferences: Optional[Dict[str, str]] = None
+) -> List[SchemaRecommendation]:
+    """
+    Generate AI-powered schema recommendations using pattern analysis.
+    
+    This AI system analyzes database patterns and provides intelligent suggestions
+    based on industry best practices and common optimization patterns.
+    """
+    ai_recommendations = []
+    
+    try:
+        engine = create_engine(database_url)
+        
+        for table in tables:
+            # AI Analysis 1: Index Recommendations
+            index_recs = _ai_analyze_indexing_opportunities(engine, table)
+            ai_recommendations.extend(index_recs)
+            
+            # AI Analysis 2: Industry-Specific Patterns
+            industry_recs = _ai_analyze_industry_patterns(engine, table, user_preferences)
+            ai_recommendations.extend(industry_recs)
+            
+    except SQLAlchemyError:
+        # Fallback AI recommendations based on common patterns
+        ai_recommendations = _get_fallback_ai_recommendations(tables)
+    
+    return ai_recommendations
+
+
+def _ai_analyze_indexing_opportunities(engine: Engine, table: str) -> List[SchemaRecommendation]:
+    """AI analysis for indexing opportunities."""
+    recommendations = []
+    
+    try:
+        # Get columns that would benefit from indexes
+        columns = _get_table_columns(engine, table)
+        
+        # AI Rule: Foreign key columns should have indexes
+        fk_columns = [col for col in columns if col.lower().endswith('_id') and col.lower() != 'id']
+        for fk_col in fk_columns:
+            recommendations.append(SchemaRecommendation(
+                type="ai_indexing",
+                priority="high",
+                description=f"🚀 Add index on foreign key column '{fk_col}' for better JOIN performance",
+                sql_example=f"CREATE INDEX idx_{table}_{fk_col} ON {table}({fk_col});",
+                benefits=["Faster JOINs", "Improved query performance", "Better foreign key lookups"],
+                effort_level="low"
+            ))
+        
+        # AI Rule: Email columns should have indexes
+        email_columns = [col for col in columns if 'email' in col.lower()]
+        for email_col in email_columns:
+            recommendations.append(SchemaRecommendation(
+                type="ai_indexing",
+                priority="medium",
+                description=f"📧 Add index on email column '{email_col}' for user lookups",
+                sql_example=f"CREATE INDEX idx_{table}_{email_col} ON {table}({email_col});",
+                benefits=["Faster user authentication", "Improved search performance"],
+                effort_level="low"
+            ))
+            
+    except SQLAlchemyError:
+        pass
+    
+    return recommendations
+
+
+def _ai_analyze_industry_patterns(engine: Engine, table: str, user_preferences: Optional[Dict[str, str]] = None) -> List[SchemaRecommendation]:
+    """AI analysis for industry-specific patterns and best practices."""
+    recommendations = []
+    
+    try:
+        columns = _get_table_columns(engine, table)
+        column_names_lower = [col.lower() for col in columns]
+        
+        # AI Rule: Music industry patterns
+        if any(col in column_names_lower for col in ['isrc', 'artist', 'song', 'track', 'album']):
+            if 'isrc' in column_names_lower and 'spotify_id' not in column_names_lower:
+                recommendations.append(SchemaRecommendation(
+                    type="ai_industry",
+                    priority="medium",
+                    description="🎵 Music table detected - consider adding streaming platform IDs",
+                    sql_example=f"ALTER TABLE {table} ADD COLUMN spotify_id VARCHAR(50);\nALTER TABLE {table} ADD COLUMN apple_music_id VARCHAR(50);",
+                    benefits=["Better platform integration", "Enhanced data linking", "Industry standard compliance"],
+                    effort_level="low"
+                ))
+            
+            if 'play_count' in column_names_lower or 'streams' in column_names_lower:
+                recommendations.append(SchemaRecommendation(
+                    type="ai_industry",
+                    priority="high",
+                    description="📊 Metrics table detected - consider partitioning by date for performance",
+                    sql_example=f"-- Consider partitioning large metrics tables\nCREATE TABLE {table}_2024 PARTITION OF {table} FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');",
+                    benefits=["Better query performance", "Easier data archiving", "Improved maintenance"],
+                    effort_level="high"
+                ))
+        
+        # AI Rule: User management patterns
+        if any(col in column_names_lower for col in ['user', 'email', 'password', 'login']):
+            if 'email' in column_names_lower and 'email_verified' not in column_names_lower:
+                recommendations.append(SchemaRecommendation(
+                    type="ai_security",
+                    priority="high",
+                    description="🔐 User table should track email verification for security",
+                    sql_example=f"ALTER TABLE {table} ADD COLUMN email_verified BOOLEAN DEFAULT FALSE;\nALTER TABLE {table} ADD COLUMN email_verified_at TIMESTAMP;",
+                    benefits=["Better security", "Email validation", "User onboarding tracking"],
+                    effort_level="low"
+                ))
+                
+    except SQLAlchemyError:
+        pass
+    
+    return recommendations
+
+
+def _get_fallback_ai_recommendations(tables: List[str]) -> List[SchemaRecommendation]:
+    """Fallback AI recommendations when database analysis fails."""
+    recommendations = []
+    
+    # General best practices
+    recommendations.append(SchemaRecommendation(
+        type="ai_general",
+        priority="medium",
+        description="🕒 Consider adding audit timestamps to all tables",
+        sql_example="ALTER TABLE your_table ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;\nALTER TABLE your_table ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;",
+        benefits=["Better audit trails", "Data lineage tracking", "Debugging capabilities"],
+        effort_level="low"
+    ))
+    
+    recommendations.append(SchemaRecommendation(
+        type="ai_general",
+        priority="high",
+        description="🔑 Ensure all tables have proper primary keys",
+        sql_example="-- If no primary key exists:\nALTER TABLE your_table ADD COLUMN id INTEGER PRIMARY KEY AUTO_INCREMENT FIRST;",
+        benefits=["Better replication", "Improved performance", "Data integrity"],
+        effort_level="medium"
+    ))
+    
+    return recommendations
+
+
+def _get_table_columns(engine: Engine, table: str) -> List[str]:
+    """Get list of column names for a table."""
+    columns = []
+    
+    try:
+        query = text(f"SELECT * FROM {table} LIMIT 0")
+        with engine.begin() as conn:
+            result = conn.execute(query)
+            columns = list(result.keys())
+    except SQLAlchemyError:
+        pass
+    
+    return columns

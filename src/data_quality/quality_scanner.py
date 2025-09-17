@@ -60,6 +60,10 @@ def scan_nulls(database_url: str, table_patterns: Optional[List[str]] = None) ->
     issues = []
 
     try:
+        # Test connection first
+        with engine.begin() as conn:
+            conn.execute(text("SELECT 1"))
+        
         # Get all tables or filter by patterns
         tables = _get_tables(engine, table_patterns)
 
@@ -89,7 +93,7 @@ def scan_nulls(database_url: str, table_patterns: Optional[List[str]] = None) ->
                     )
                     issues.append(issue)
 
-    except SQLAlchemyError as e:
+    except (SQLAlchemyError, OSError, IOError) as e:
         # Create an error issue
         issue = QualityIssue(
             table="",
@@ -100,6 +104,19 @@ def scan_nulls(database_url: str, table_patterns: Optional[List[str]] = None) ->
             percent=0.0,
             severity="critical",
             description=f"Database scan failed: {str(e)}",
+        )
+        issues.append(issue)
+    except Exception as e:
+        # Catch any other exceptions
+        issue = QualityIssue(
+            table="",
+            column="",
+            issue_type="error",
+            count=0,
+            total=0,
+            percent=0.0,
+            severity="critical",
+            description=f"Unexpected error during scan: {str(e)}",
         )
         issues.append(issue)
 
@@ -128,6 +145,10 @@ def scan_orphans(
     issues = []
 
     try:
+        # Test connection first
+        with engine.begin() as conn:
+            conn.execute(text("SELECT 1"))
+        
         # Get all tables or filter by patterns
         tables = _get_tables(engine, table_patterns)
 
@@ -153,7 +174,7 @@ def scan_orphans(
                     )
                     issues.append(issue)
 
-    except SQLAlchemyError as e:
+    except (SQLAlchemyError, OSError, IOError) as e:
         issue = QualityIssue(
             table="",
             column="",
@@ -163,6 +184,18 @@ def scan_orphans(
             percent=0.0,
             severity="critical",
             description=f"Orphan scan failed: {str(e)}",
+        )
+        issues.append(issue)
+    except Exception as e:
+        issue = QualityIssue(
+            table="",
+            column="",
+            issue_type="error",
+            count=0,
+            total=0,
+            percent=0.0,
+            severity="critical",
+            description=f"Unexpected error during orphan scan: {str(e)}",
         )
         issues.append(issue)
 
@@ -283,7 +316,7 @@ def _get_tables(engine: Engine, patterns: Optional[List[str]] = None) -> List[st
 
 
 def _get_key_columns(engine: Engine, table: str) -> List[str]:
-    """Get columns that are likely to be important (IDs, keys, etc.)."""
+    """Get columns that are likely to be important (IDs, keys, emails, etc.)."""
     try:
         # Try MySQL/PostgreSQL approach first
         query = text(
@@ -295,6 +328,7 @@ def _get_key_columns(engine: Engine, table: str) -> List[str]:
             AND (column_name LIKE '%id%' 
                  OR column_name LIKE '%key%' 
                  OR column_name = 'isrc'
+                 OR column_name LIKE '%email%'
                  OR column_name LIKE '%_code'
                  OR column_name LIKE '%_number')
             ORDER BY ordinal_position
@@ -318,6 +352,7 @@ def _get_key_columns(engine: Engine, table: str) -> List[str]:
                         "id" in column_name.lower()
                         or "key" in column_name.lower()
                         or column_name.lower() == "isrc"
+                        or "email" in column_name.lower()
                         or column_name.lower().endswith("_code")
                         or column_name.lower().endswith("_number")
                     ):
@@ -336,6 +371,7 @@ def _get_key_columns(engine: Engine, table: str) -> List[str]:
                             "id" in col.lower()
                             or "key" in col.lower()
                             or col.lower() == "isrc"
+                            or "email" in col.lower()
                             or col.lower().endswith("_code")
                             or col.lower().endswith("_number")
                         ):
