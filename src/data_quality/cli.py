@@ -357,9 +357,10 @@ def suggest(database_url: Optional[str], tables: Optional[str], use_ai: bool):
                     click.echo(f"   Effort: {click.style(suggestion.effort_level, fg='cyan')}")
 
                     if suggestion.sql_example:
-                        click.echo(
-                            f"   {click.style('SQL:', fg='blue')} {suggestion.sql_example.split()[0]}..."
-                        )
+                        click.echo(f"   {click.style('SQL Example:', fg='blue', bold=True)}")
+                        for line in suggestion.sql_example.split('\n'):
+                            if line.strip():
+                                click.echo(f"      {click.style(line.strip(), fg='cyan')}")
 
     except Exception as e:
         click.echo(f"❌ Error: {str(e)}", err=True)
