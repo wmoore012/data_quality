@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: MIT
+Copyright (c) 2024 MusicScope -->
+
 # Changelog
 
 All notable changes to this project will be documented in this file.

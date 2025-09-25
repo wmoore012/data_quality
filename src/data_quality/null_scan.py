@@ -1,6 +1,9 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2024 MusicScope
+
 from __future__ import annotations
 
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Any
 
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
@@ -8,7 +11,7 @@ from sqlalchemy.engine import Engine
 
 def quick_null_scan(
     engine: Engine,
-    table_patterns: Optional[Iterable[str]] = None,
+    table_patterns: Optional[Optional[Iterable[str]]] = None,
     key_like: Optional[Iterable[str]] = ("id", "_id", "isrc"),
 ) -> Dict[str, Dict[str, int]]:
     """

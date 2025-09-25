@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2024 MusicScope
+
 """
 Command-line interface for data-quality.
 
@@ -6,16 +9,17 @@ Provides easy-to-use commands for database quality scanning with colorful output
 
 import os
 import sys
-from typing import Optional
+from typing import Optional, Any
 
 import click
 
 from .quality_scanner import health_check, scan_nulls, scan_orphans
 from .schema_analyzer import analyze_schema, suggest_improvements
+from .advanced_analysis import analyze_database_completeness, identify_impossible_columns
 
 
 @click.group()
-def cli():
+def cli() -> None:
     """Database quality scanning tools."""
     pass
 
@@ -33,14 +37,14 @@ def cli():
 @click.option(
     "--no-recommendations", is_flag=True, help="Disable schema improvement recommendations"
 )
-@click.option("--no-ai", is_flag=True, help="Disable AI-powered suggestions")
+@click.option("--use-ai", is_flag=True, help="Enable AI-powered suggestions (requires API keys)")
 def check(
     database_url: Optional[str],
     tables: Optional[str],
     format: str,
     no_recommendations: bool,
-    no_ai: bool,
-):
+    use_ai: bool,
+) -> None:
     """Run comprehensive database health check."""
 
     # Get database URL from parameter or environment
@@ -87,12 +91,27 @@ def check(
         else:
             # Text format
             if report.all_good:
-                click.echo("✅ All good! No data quality issues found.")
+                click.echo("🎉 PERFECT! 0 data quality issues found!")
+                click.echo("✅ This means: Database is in excellent condition")
+                click.echo("✅ This means: All data integrity checks passed")
+                click.echo("✅ This means: System is working flawlessly")
             else:
-                click.echo(f"❌ Found {report.total_issues} data quality issues:")
-                click.echo(f"   Critical: {report.summary.get('critical', 0)}")
-                click.echo(f"   Warning:  {report.summary.get('warning', 0)}")
-                click.echo(f"   Info:     {report.summary.get('info', 0)}")
+                critical_count = report.summary.get('critical', 0)
+                warning_count = report.summary.get('warning', 0)
+                info_count = report.summary.get('info', 0)
+                
+                if critical_count == 0:
+                    click.echo(f"✅ Found {report.total_issues} data quality issues (0 critical - GOOD!):")
+                else:
+                    click.echo(f"❌ Found {report.total_issues} data quality issues:")
+                
+                if critical_count == 0:
+                    click.echo(f"   🎉 Critical: 0 (PERFECT!)")
+                else:
+                    click.echo(f"   Critical: {critical_count}")
+                    
+                click.echo(f"   Warning:  {warning_count}")
+                click.echo(f"   Info:     {info_count}")
                 click.echo()
 
                 for issue in report.issues_by_severity:
@@ -112,7 +131,7 @@ def check(
 @cli.command()
 @click.option("--database-url", "-d", help="Database URL (or set DATABASE_URL env var)")
 @click.option("--tables", "-t", help="Comma-separated table patterns to scan")
-def nulls(database_url: Optional[str], tables: Optional[str]):
+def nulls(database_url: Optional[str], tables: Optional[str]) -> None:
     """Scan for null values in key columns."""
 
     db_url = database_url or os.getenv("DATABASE_URL")
@@ -149,7 +168,7 @@ def nulls(database_url: Optional[str], tables: Optional[str]):
 @cli.command()
 @click.option("--database-url", "-d", help="Database URL (or set DATABASE_URL env var)")
 @click.option("--tables", "-t", help="Comma-separated table patterns to scan")
-def orphans(database_url: Optional[str], tables: Optional[str]):
+def orphans(database_url: Optional[str], tables: Optional[str]) -> None:
     """Scan for orphaned records (broken foreign key references)."""
 
     db_url = database_url or os.getenv("DATABASE_URL")
@@ -199,7 +218,7 @@ def analyze(
     no_boolean_suggestions: bool,
     no_fact_analysis: bool,
     generate_sql: bool,
-):
+) -> None:
     """Analyze database schema and suggest improvements."""
 
     db_url = database_url or os.getenv("DATABASE_URL")
@@ -307,7 +326,7 @@ def analyze(
 )
 @click.option("--tables", "-t", help="Comma-separated table names to analyze")
 @click.option("--use-ai", is_flag=True, help="Include AI-powered recommendations (experimental)")
-def suggest(database_url: Optional[str], tables: Optional[str], use_ai: bool):
+def suggest(database_url: Optional[str], tables: Optional[str], use_ai: bool) -> None:
     """Get comprehensive improvement suggestions for multiple tables."""
 
     db_url = database_url or os.getenv("DATABASE_URL")
@@ -361,6 +380,114 @@ def suggest(database_url: Optional[str], tables: Optional[str], use_ai: bool):
                         for line in suggestion.sql_example.split('\n'):
                             if line.strip():
                                 click.echo(f"      {click.style(line.strip(), fg='cyan')}")
+
+    except Exception as e:
+        click.echo(f"❌ Error: {str(e)}", err=True)
+        sys.exit(1)
+
+
+@cli.command()
+@click.option(
+    "--database-url",
+    "-d",
+    help="Database URL (mysql://user:pass@host/db, postgresql://user:pass@host/db, or set DATABASE_URL env var)",
+)
+@click.option("--tables", "-t", help="Comma-separated table patterns to analyze")
+@click.option(
+    "--format", "-f", type=click.Choice(["text", "json"]), default="text", help="Output format"
+)
+@click.option("--include-impossible", is_flag=True, help="Include impossible-to-fill column detection")
+def completeness(
+    database_url: Optional[str],
+    tables: Optional[str],
+    format: str,
+    include_impossible: bool,
+) -> None:
+    """Analyze database completeness and data quality."""
+
+    # Get database URL from parameter or environment
+    db_url = database_url or os.getenv("DATABASE_URL")
+    if not db_url:
+        click.echo(
+            "❌ Error: Database URL required. Use --database-url or set DATABASE_URL env var.",
+            err=True,
+        )
+        sys.exit(1)
+
+    # Parse table patterns
+    table_patterns = None
+    if tables:
+        table_patterns = [t.strip() for t in tables.split(",")]
+
+    try:
+        # Run completeness analysis
+        analysis = analyze_database_completeness(
+            db_url, 
+            table_patterns, 
+            include_impossible_detection=include_impossible
+        )
+
+        if format == "json":
+            import json
+            # Convert to JSON-serializable format
+            json_data = {
+                "overall_completeness_score": analysis.overall_completeness_score,
+                "total_tables": analysis.total_tables,
+                "total_columns": analysis.total_columns,
+                "perfect_columns_count": analysis.perfect_columns_count,
+                "critical_columns_count": analysis.critical_columns_count,
+                "impossible_columns_count": analysis.impossible_columns_count,
+                "summary_recommendations": analysis.summary_recommendations,
+                "tables": [
+                    {
+                        "name": table.name,
+                        "total_rows": table.total_rows,
+                        "completeness_score": table.completeness_score,
+                        "perfect_columns": table.perfect_columns,
+                        "critical_columns": table.critical_columns,
+                        "impossible_columns": table.impossible_columns,
+                        "recommendations": table.recommendations
+                    }
+                    for table in analysis.tables
+                ]
+            }
+            click.echo(json.dumps(json_data, indent=2))
+        else:
+            # Text format output
+            click.echo(f"\n📊 Database Completeness Analysis")
+            click.echo("=" * 50)
+            
+            # Overall statistics
+            score_color = "green" if analysis.overall_completeness_score >= 85 else "yellow" if analysis.overall_completeness_score >= 70 else "red"
+            click.echo(f"\n🎯 Overall Completeness: {click.style(f'{analysis.overall_completeness_score:.1f}%', fg=score_color, bold=True)}")
+            click.echo(f"📋 Tables Analyzed: {analysis.total_tables}")
+            click.echo(f"📊 Total Columns: {analysis.total_columns}")
+            click.echo(f"✅ Perfect Columns: {click.style(str(analysis.perfect_columns_count), fg='green')}")
+            click.echo(f"❌ Critical Columns: {click.style(str(analysis.critical_columns_count), fg='red')}")
+            
+            if include_impossible:
+                click.echo(f"🚫 Impossible Columns: {click.style(str(analysis.impossible_columns_count), fg='yellow')}")
+            
+            # Table details
+            if analysis.tables:
+                click.echo(f"\n📋 Table Details:")
+                for table in analysis.tables[:10]:  # Show top 10 tables
+                    score_color = "green" if table.completeness_score >= 85 else "yellow" if table.completeness_score >= 70 else "red"
+                    click.echo(f"\n  📦 {click.style(table.name, fg='cyan', bold=True)} ({table.total_rows:,} rows)")
+                    click.echo(f"     Completeness: {click.style(f'{table.completeness_score:.1f}%', fg=score_color)}")
+                    
+                    if table.perfect_columns:
+                        click.echo(f"     ✅ Perfect: {', '.join(table.perfect_columns[:5])}")
+                    if table.critical_columns:
+                        click.echo(f"     ❌ Critical: {click.style(', '.join(table.critical_columns[:5]), fg='red')}")
+                    if include_impossible and table.impossible_columns:
+                        click.echo(f"     🚫 Impossible: {click.style(', '.join(table.impossible_columns[:3]), fg='yellow')}")
+            
+            # Summary recommendations
+            if analysis.summary_recommendations:
+                click.echo(f"\n💡 Recommendations:")
+                for i, rec in enumerate(analysis.summary_recommendations[:5], 1):
+                    click.echo(f"   {i}. {rec}")
 
     except Exception as e:
         click.echo(f"❌ Error: {str(e)}", err=True)

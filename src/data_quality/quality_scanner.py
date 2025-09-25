@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2024 MusicScope
+
 """
 Comprehensive database quality scanning with severity-based reporting.
 
@@ -8,7 +11,7 @@ orphan record identification, and comprehensive quality reporting.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Any, Tuple
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
@@ -40,7 +43,7 @@ class HealthReport:
     scan_time_ms: int
 
 
-def scan_nulls(database_url: str, table_patterns: Optional[List[str]] = None) -> List[QualityIssue]:
+def scan_nulls(database_url: str, table_patterns: Optional[Optional[List[str]]] = None) -> List[QualityIssue]:
     """
     Scan database for null values in key columns with detailed reporting.
 
@@ -124,7 +127,7 @@ def scan_nulls(database_url: str, table_patterns: Optional[List[str]] = None) ->
 
 
 def scan_orphans(
-    database_url: str, table_patterns: Optional[List[str]] = None
+    database_url: str, table_patterns: Optional[Optional[List[str]]] = None
 ) -> List[QualityIssue]:
     """
     Scan database for orphaned records (foreign keys pointing to missing records).
@@ -202,7 +205,7 @@ def scan_orphans(
     return issues
 
 
-def health_check(database_url: str, table_patterns: Optional[List[str]] = None) -> HealthReport:
+def health_check(database_url: str, table_patterns: Optional[Optional[List[str]]] = None) -> HealthReport:
     """
     Perform comprehensive database health check covering common issues.
 
@@ -260,7 +263,7 @@ def health_check(database_url: str, table_patterns: Optional[List[str]] = None) 
     )
 
 
-def _get_tables(engine: Engine, patterns: Optional[List[str]] = None) -> List[str]:
+def _get_tables(engine: Engine, patterns: Optional[Optional[List[str]]] = None) -> List[str]:
     """Get list of tables, optionally filtered by patterns."""
     try:
         # Try MySQL/PostgreSQL approach
@@ -453,7 +456,7 @@ def _get_orphan_count(
 
 
 def _scan_duplicates(
-    database_url: str, table_patterns: Optional[List[str]] = None
+    database_url: str, table_patterns: Optional[Optional[List[str]]] = None
 ) -> List[QualityIssue]:
     """Scan for duplicate records in key columns."""
     engine = create_engine(database_url)

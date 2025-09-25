@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: MIT
+Copyright (c) 2024 Perday Labs -->
+
 # Contributing to icat-data-quality
 
 Thank you for your interest in contributing to icat-data-quality! This module follows the **OSS bricks** philosophy - small, focused, production-safe utilities designed for reliability and maintainability.

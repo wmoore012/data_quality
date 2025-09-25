@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2024 MusicScope
+
 from data_quality import quick_null_scan
 from sqlalchemy import create_engine, text
 

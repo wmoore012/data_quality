@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2024 MusicScope
+
 """
 Interactive CLI for data-quality with beautiful menus and colors.
 
@@ -6,7 +9,7 @@ Provides a rich, menu-driven interface for database quality scanning.
 
 import os
 import sys
-from typing import List, Optional
+from typing import List, Optional, Any
 
 try:
     from rich.console import Console
@@ -43,11 +46,11 @@ console = Console()
 class InteractiveDataQuality:
     """Interactive CLI for data quality scanning."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.db_url = None
         self.connected = False
         
-    def show_banner(self):
+    def show_banner(self) -> None:
         """Display the application banner."""
         banner = Text.assemble(
             ("🔍 ", "bright_magenta"),
@@ -67,7 +70,7 @@ class InteractiveDataQuality:
         console.print(panel)
         console.print()
         
-    def show_connection_status(self):
+    def show_connection_status(self) -> None:
         """Show current database connection status."""
         if self.connected:
             status = Text("✅ Connected", style="bright_green bold")
@@ -83,7 +86,7 @@ class InteractiveDataQuality:
         ))
         console.print()
         
-    def connect_database(self):
+    def connect_database(self) -> None:
         """Handle database connection setup."""
         console.print(Panel(
             "⚙️ Database Setup",
@@ -158,7 +161,7 @@ class InteractiveDataQuality:
         
         return choice
         
-    def run_health_check(self):
+    def run_health_check(self) -> None:
         """Run comprehensive health check with progress indicator."""
         if not self.connected:
             console.print("❌ [red]Please connect to a database first![/red]")
@@ -260,7 +263,7 @@ class InteractiveDataQuality:
         console.print(f"\n⏱️  Scan completed in {report.scan_time_ms}ms")
         self.pause()
         
-    def run_schema_analysis(self):
+    def run_schema_analysis(self) -> None:
         """Run schema analysis on a specific table."""
         if not self.connected:
             console.print("❌ [red]Please connect to a database first![/red]")
@@ -347,7 +350,7 @@ class InteractiveDataQuality:
             
         self.pause()
         
-    def run_ai_suggestions(self):
+    def run_ai_suggestions(self) -> None:
         """Get AI-powered suggestions for multiple tables."""
         if not self.connected:
             console.print("❌ [red]Please connect to a database first![/red]")
@@ -411,7 +414,7 @@ class InteractiveDataQuality:
                 
         self.pause()
         
-    def show_quick_stats(self):
+    def show_quick_stats(self) -> None:
         """Show quick database statistics."""
         if not self.connected:
             console.print("❌ [red]Please connect to a database first![/red]")
@@ -436,13 +439,13 @@ class InteractiveDataQuality:
         console.print(stats_table)
         self.pause()
         
-    def pause(self):
+    def pause(self) -> None:
         """Pause and wait for user input."""
         console.print()
         Prompt.ask("Press Enter to continue", default="")
         console.clear()
         
-    def run(self):
+    def run(self) -> None:
         """Main application loop."""
         console.clear()
         self.show_banner()
@@ -482,7 +485,7 @@ class InteractiveDataQuality:
             console.clear()
 
 
-def main():
+def main() -> None:
     """Entry point for the interactive CLI."""
     try:
         app = InteractiveDataQuality()

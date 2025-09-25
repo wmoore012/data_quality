@@ -1,0 +1,375 @@
+{
+  "timestamp": "2024-12-17T10:00:00Z",
+  "database_url_masked": "127.0.0.1:3307/icatalog_public",
+  "scan_results": {
+    "all_good": false,
+    "total_issues": 35,
+    "critical_issues": 7,
+    "warning_issues": 27,
+    "info_issues": 1,
+    "scan_time_ms": 46879
+  },
+  "issues": [
+    {
+      "table": "albums",
+      "column": "label_id",
+      "type": "nulls",
+      "severity": "critical",
+      "count": 25,
+      "total_rows": 76,
+      "percentage": 32.89473684210527,
+      "description": "Table 'albums' has 25 null values in 'label_id' (32.9%)"
+    },
+    {
+      "table": "lyrics_cache",
+      "column": "artist_id",
+      "type": "nulls",
+      "severity": "critical",
+      "count": 1,
+      "total_rows": 1,
+      "percentage": 100.0,
+      "description": "Table 'lyrics_cache' has 1 null values in 'artist_id' (100.0%)"
+    },
+    {
+      "table": "lyrics_cache",
+      "column": "isrc",
+      "type": "nulls",
+      "severity": "critical",
+      "count": 1,
+      "total_rows": 1,
+      "percentage": 100.0,
+      "description": "Table 'lyrics_cache' has 1 null values in 'isrc' (100.0%)"
+    },
+    {
+      "table": "lyrics_cache",
+      "column": "primary_artist_id",
+      "type": "nulls",
+      "severity": "critical",
+      "count": 1,
+      "total_rows": 1,
+      "percentage": 100.0,
+      "description": "Table 'lyrics_cache' has 1 null values in 'primary_artist_id' (100.0%)"
+    },
+    {
+      "table": "songs",
+      "column": "album_id",
+      "type": "nulls",
+      "severity": "critical",
+      "count": 10,
+      "total_rows": 125,
+      "percentage": 8.0,
+      "description": "Table 'songs' has 10 null values in 'album_id' (8.0%)"
+    },
+    {
+      "table": "spotify_tracks_raw",
+      "column": "playlist_id",
+      "type": "nulls",
+      "severity": "critical",
+      "count": 1,
+      "total_rows": 119,
+      "percentage": 0.8403361344537815,
+      "description": "Table 'spotify_tracks_raw' has 1 null values in 'playlist_id' (0.8%)"
+    },
+    {
+      "table": "youtube_videos",
+      "column": "isrc",
+      "type": "nulls",
+      "severity": "critical",
+      "count": 175,
+      "total_rows": 315,
+      "percentage": 55.55555555555556,
+      "description": "Table 'youtube_videos' has 175 null values in 'isrc' (55.6%)"
+    },
+    {
+      "table": "albums",
+      "column": "label_id",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 11,
+      "total_rows": 76,
+      "percentage": 14.473684210526317,
+      "description": "Table 'albums' has 11 duplicate values in 'label_id'"
+    },
+    {
+      "table": "artist_aliases",
+      "column": "artist_id",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 2,
+      "total_rows": 14,
+      "percentage": 14.285714285714285,
+      "description": "Table 'artist_aliases' has 2 duplicate values in 'artist_id'"
+    },
+    {
+      "table": "oss_module_benchmarks",
+      "column": "bottlenecks_identified",
+      "type": "nulls",
+      "severity": "warning",
+      "count": 24,
+      "total_rows": 24,
+      "percentage": 100.0,
+      "description": "Table 'oss_module_benchmarks' has 24 null values in 'bottlenecks_identified' (100.0%)"
+    },
+    {
+      "table": "song_artist_roles",
+      "column": "artist_id",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 195,
+      "total_rows": 249,
+      "percentage": 78.3132530120482,
+      "description": "Table 'song_artist_roles' has 195 duplicate values in 'artist_id'"
+    },
+    {
+      "table": "song_artist_roles",
+      "column": "isrc",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 134,
+      "total_rows": 249,
+      "percentage": 53.81526104417671,
+      "description": "Table 'song_artist_roles' has 134 duplicate values in 'isrc'"
+    },
+    {
+      "table": "song_artist_roles",
+      "column": "role_id",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 247,
+      "total_rows": 249,
+      "percentage": 99.19678714859438,
+      "description": "Table 'song_artist_roles' has 247 duplicate values in 'role_id'"
+    },
+    {
+      "table": "song_labels",
+      "column": "isrc",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 177,
+      "total_rows": 302,
+      "percentage": 58.609271523178805,
+      "description": "Table 'song_labels' has 177 duplicate values in 'isrc'"
+    },
+    {
+      "table": "song_labels",
+      "column": "label_id",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 231,
+      "total_rows": 302,
+      "percentage": 76.49006622516556,
+      "description": "Table 'song_labels' has 231 duplicate values in 'label_id'"
+    },
+    {
+      "table": "songs",
+      "column": "album_id",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 80,
+      "total_rows": 125,
+      "percentage": 64.0,
+      "description": "Table 'songs' has 80 duplicate values in 'album_id'"
+    },
+    {
+      "table": "songs",
+      "column": "label_id",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 91,
+      "total_rows": 125,
+      "percentage": 72.8,
+      "description": "Table 'songs' has 91 duplicate values in 'label_id'"
+    },
+    {
+      "table": "spotify_track_static",
+      "column": "album_id",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 79,
+      "total_rows": 118,
+      "percentage": 66.94915254237289,
+      "description": "Table 'spotify_track_static' has 79 duplicate values in 'album_id'"
+    },
+    {
+      "table": "spotify_track_static",
+      "column": "disc_number",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 117,
+      "total_rows": 118,
+      "percentage": 99.15254237288136,
+      "description": "Table 'spotify_track_static' has 117 duplicate values in 'disc_number'"
+    },
+    {
+      "table": "spotify_track_static",
+      "column": "isrc",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 3,
+      "total_rows": 118,
+      "percentage": 2.5423728813559325,
+      "description": "Table 'spotify_track_static' has 3 duplicate values in 'isrc'"
+    },
+    {
+      "table": "spotify_track_static",
+      "column": "track_number",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 100,
+      "total_rows": 118,
+      "percentage": 84.7457627118644,
+      "description": "Table 'spotify_track_static' has 100 duplicate values in 'track_number'"
+    },
+    {
+      "table": "spotify_tracks",
+      "column": "isrc",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 3,
+      "total_rows": 118,
+      "percentage": 2.5423728813559325,
+      "description": "Table 'spotify_tracks' has 3 duplicate values in 'isrc'"
+    },
+    {
+      "table": "spotify_tracks_raw",
+      "column": "playlist_id",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 117,
+      "total_rows": 119,
+      "percentage": 98.31932773109243,
+      "description": "Table 'spotify_tracks_raw' has 117 duplicate values in 'playlist_id'"
+    },
+    {
+      "table": "stream_metrics",
+      "column": "disc_number",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 1833,
+      "total_rows": 1939,
+      "percentage": 94.53326456936566,
+      "description": "Table 'stream_metrics' has 1833 duplicate values in 'disc_number'"
+    },
+    {
+      "table": "stream_metrics",
+      "column": "isrc",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 1814,
+      "total_rows": 1939,
+      "percentage": 93.55337802991232,
+      "description": "Table 'stream_metrics' has 1814 duplicate values in 'isrc'"
+    },
+    {
+      "table": "stream_metrics",
+      "column": "track_number",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 1921,
+      "total_rows": 1939,
+      "percentage": 99.07168643630737,
+      "description": "Table 'stream_metrics' has 1921 duplicate values in 'track_number'"
+    },
+    {
+      "table": "tidal_track_static",
+      "column": "album_id",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 73,
+      "total_rows": 115,
+      "percentage": 63.47826086956522,
+      "description": "Table 'tidal_track_static' has 73 duplicate values in 'album_id'"
+    },
+    {
+      "table": "tidal_track_static",
+      "column": "disc_number",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 114,
+      "total_rows": 115,
+      "percentage": 99.1304347826087,
+      "description": "Table 'tidal_track_static' has 114 duplicate values in 'disc_number'"
+    },
+    {
+      "table": "tidal_track_static",
+      "column": "isrc",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 7,
+      "total_rows": 115,
+      "percentage": 6.086956521739131,
+      "description": "Table 'tidal_track_static' has 7 duplicate values in 'isrc'"
+    },
+    {
+      "table": "tidal_track_static",
+      "column": "track_number",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 97,
+      "total_rows": 115,
+      "percentage": 84.34782608695653,
+      "description": "Table 'tidal_track_static' has 97 duplicate values in 'track_number'"
+    },
+    {
+      "table": "tidal_tracks_raw",
+      "column": "playlist_id",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 114,
+      "total_rows": 115,
+      "percentage": 99.1304347826087,
+      "description": "Table 'tidal_tracks_raw' has 114 duplicate values in 'playlist_id'"
+    },
+    {
+      "table": "youtube_comments",
+      "column": "video_id",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 689,
+      "total_rows": 696,
+      "percentage": 98.99425287356321,
+      "description": "Table 'youtube_comments' has 689 duplicate values in 'video_id'"
+    },
+    {
+      "table": "youtube_videos",
+      "column": "isrc",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 19,
+      "total_rows": 315,
+      "percentage": 6.031746031746032,
+      "description": "Table 'youtube_videos' has 19 duplicate values in 'isrc'"
+    },
+    {
+      "table": "youtube_videos_raw",
+      "column": "playlist_id",
+      "type": "duplicates",
+      "severity": "warning",
+      "count": 313,
+      "total_rows": 316,
+      "percentage": 99.0506329113924,
+      "description": "Table 'youtube_videos_raw' has 313 duplicate values in 'playlist_id'"
+    },
+    {
+      "table": "stream_metrics",
+      "column": "disc_number",
+      "type": "nulls",
+      "severity": "info",
+      "count": 105,
+      "total_rows": 1939,
+      "percentage": 5.415162454873646,
+      "description": "Table 'stream_metrics' has 105 null values in 'disc_number' (5.4%)"
+    }
+  ],
+  "ci_cd_status": {
+    "should_fail": false,
+    "deployment_safe": false,
+    "requires_attention": true
+  },
+  "formatted_output": {
+    "github_comment": "## \ud83d\udea8 Data Quality: CRITICAL ISSUES\n\n### \ud83d\udcca Scan Results\n- **Total Issues**: 35\n- **Critical**: 7 \ud83d\udea8\n- **Warning**: 27 \u26a0\ufe0f\n- **Info**: 1 \u2139\ufe0f\n- **Scan Time**: 46879ms\n\n### \ud83d\ude80 Deployment Status\n\u274c **DEPLOYMENT BLOCKED** - Critical issues must be resolved\n\n### \ud83d\udd0d Top Issues\n- \ud83d\udea8 **albums.label_id**: Table 'albums' has 25 null values in 'label_id' (32.9%)\n- \ud83d\udea8 **lyrics_cache.artist_id**: Table 'lyrics_cache' has 1 null values in 'artist_id' (100.0%)\n- \ud83d\udea8 **lyrics_cache.isrc**: Table 'lyrics_cache' has 1 null values in 'isrc' (100.0%)\n- \ud83d\udea8 **lyrics_cache.primary_artist_id**: Table 'lyrics_cache' has 1 null values in 'primary_artist_id' (100.0%)\n- \ud83d\udea8 **songs.album_id**: Table 'songs' has 10 null values in 'album_id' (8.0%)\n\n---\n*Automated data quality check*",
+    "slack_message": "{\"attachments\": [{\"color\": \"danger\", \"title\": \":rotating_light: Critical Data Quality Issues\", \"fields\": [{\"title\": \"Issues Found\", \"value\": \"Critical: 7 | Warning: 27 | Info: 1\", \"short\": true}, {\"title\": \"Deployment Status\", \"value\": \"\\u274c Blocked\", \"short\": true}], \"footer\": \"Data Quality Scanner\", \"ts\": 1734422400}]}",
+    "jenkins_log": "============================================================\nDATA QUALITY CHECK RESULTS\n============================================================\nSTATUS: CRITICAL ISSUES FOUND \u2717\nTotal Issues: 35\nCritical: 7\nWarning: 27\nInfo: 1\nScan Time: 46879ms\n\nDEPLOYMENT: BLOCKED \u2717\n============================================================\n",
+    "gitlab_comment": "### \ud83d\udea8 Data Quality: CRITICAL ISSUES\n\n#### \ud83d\udcca Scan Results\n- **Total Issues**: 35\n- **Critical**: 7 \ud83d\udea8\n- **Warning**: 27 \u26a0\ufe0f\n- **Info**: 1 \u2139\ufe0f\n- **Scan Time**: 46879ms\n\n#### \ud83d\ude80 Deployment Status\n\u274c **DEPLOYMENT BLOCKED** - Critical issues must be resolved\n\n#### \ud83d\udd0d Top Issues\n- \ud83d\udea8 **albums.label_id**: Table 'albums' has 25 null values in 'label_id' (32.9%)\n- \ud83d\udea8 **lyrics_cache.artist_id**: Table 'lyrics_cache' has 1 null values in 'artist_id' (100.0%)\n- \ud83d\udea8 **lyrics_cache.isrc**: Table 'lyrics_cache' has 1 null values in 'isrc' (100.0%)\n- \ud83d\udea8 **lyrics_cache.primary_artist_id**: Table 'lyrics_cache' has 1 null values in 'primary_artist_id' (100.0%)\n- \ud83d\udea8 **songs.album_id**: Table 'songs' has 10 null values in 'album_id' (8.0%)\n\n---\n*Automated data quality check*"
+  }
+}

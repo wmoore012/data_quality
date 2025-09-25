@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2024 MusicScope
+
 """
 Tests for data quality benchmarking functionality.
 
@@ -145,23 +148,44 @@ class TestBenchmarkRequirements:
     def test_scan_speed_per_million_rows(self):
         """Test measuring scan speed per million rows."""
         # Requirement: measuring scan speed per million rows
-        # This test will fail initially (TDD)
-        with pytest.raises(ImportError):
-            from data_quality.benchmarks import benchmark_scan_speed
+        from data_quality.benchmarks import benchmark_scan_speed
+        
+        # Test with small dataset for speed
+        result = benchmark_scan_speed("sqlite:///:memory:", 1000)
+        
+        assert result.test_name == "scan_speed"
+        assert result.rows_processed == 1000
+        assert result.time_seconds > 0
+        assert result.rows_per_second > 0
+        assert 0 <= result.accuracy_score <= 1.0
 
     def test_memory_usage_during_large_scans(self):
         """Test measuring memory usage during large scans."""
         # Requirement: memory usage during large scans
-        # This test will fail initially (TDD)
-        with pytest.raises(ImportError):
-            from data_quality.benchmarks import benchmark_memory_usage
+        from data_quality.benchmarks import benchmark_memory_usage
+        
+        # Test with small dataset for speed
+        result = benchmark_memory_usage("sqlite:///:memory:", 3)
+        
+        assert result.test_name == "memory_usage"
+        assert result.rows_processed > 0
+        assert result.time_seconds > 0
+        assert result.memory_mb >= 0  # Memory usage can be 0 in test environments
 
     def test_accuracy_metrics(self):
         """Test measuring accuracy metrics."""
         # Requirement: accuracy metrics
-        # This test will fail initially (TDD)
-        with pytest.raises(ImportError):
-            from data_quality.benchmarks import benchmark_accuracy
+        from data_quality.benchmarks import benchmark_accuracy
+        
+        # Test with small dataset for speed
+        result = benchmark_accuracy("sqlite:///:memory:", 10)
+        
+        assert result.test_name == "accuracy"
+        assert result.rows_processed > 0
+        assert result.time_seconds > 0
+        assert 0 <= result.accuracy_score <= 1.0
+        assert "known_issues" in result.metadata
+        assert "detected_issues" in result.metadata
 
 
 class TestBenchmarkIntegration:
@@ -169,12 +193,37 @@ class TestBenchmarkIntegration:
 
     def test_benchmark_with_sqlite_database(self):
         """Test benchmarking with SQLite database."""
-        # This test will fail initially (TDD)
-        with pytest.raises(ImportError):
-            from data_quality.benchmarks import run_comprehensive_benchmarks
+        from data_quality.benchmarks import run_comprehensive_benchmarks
+        
+        # Mock the comprehensive benchmarks to run faster
+        import unittest.mock
+        with unittest.mock.patch('data_quality.benchmarks.benchmark_scan_speed') as mock_speed, \
+             unittest.mock.patch('data_quality.benchmarks.benchmark_memory_usage') as mock_memory, \
+             unittest.mock.patch('data_quality.benchmarks.benchmark_accuracy') as mock_accuracy:
+            
+            # Mock return values
+            from data_quality.benchmarks import BenchmarkResult
+            mock_speed.return_value = BenchmarkResult("scan_speed", 1000, 0.1, 5.0, 10000, 0.9, {})
+            mock_memory.return_value = BenchmarkResult("memory_usage", 1000, 0.1, 10.0, 10000, 0.8, {})
+            mock_accuracy.return_value = BenchmarkResult("accuracy", 1000, 0.1, 2.0, 10000, 0.95, {})
+            
+            results = run_comprehensive_benchmarks("sqlite:///:memory:")
+            
+            assert len(results) == 3
+            assert all(isinstance(r, BenchmarkResult) for r in results)
 
     def test_benchmark_performance_regression(self):
         """Test that benchmarks can detect performance regressions."""
-        # This test will fail initially (TDD)
-        with pytest.raises(ImportError):
-            from data_quality.benchmarks import run_comprehensive_benchmarks
+        from data_quality.benchmarks import benchmark_scan_speed
+        
+        # Run two benchmarks and compare (simplified test)
+        result1 = benchmark_scan_speed("sqlite:///:memory:", 100)
+        result2 = benchmark_scan_speed("sqlite:///:memory:", 100)
+        
+        # Both should complete successfully
+        assert result1.rows_per_second > 0
+        assert result2.rows_per_second > 0
+        
+        # Performance should be reasonably consistent (within 10x factor)
+        ratio = max(result1.rows_per_second, result2.rows_per_second) / min(result1.rows_per_second, result2.rows_per_second)
+        assert ratio < 10.0  # Performance shouldn't vary by more than 10x

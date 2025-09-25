@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2024 MusicScope
+
 """
 Advanced database schema analysis with AI-powered recommendations.
 
@@ -11,7 +14,7 @@ This module provides intelligent analysis of database schemas including:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
@@ -39,8 +42,8 @@ class SchemaRecommendation:
     type: str  # "normalization", "boolean", "indexing", "ai_suggestion"
     priority: str  # "high", "medium", "low"
     description: str
-    sql_example: Optional[str] = None
-    benefits: List[str] = None
+    sql_example: Optional[Optional[str]] = None
+    benefits: Optional[List[str]] = None
     effort_level: str = "medium"  # "low", "medium", "high"
 
 
@@ -138,14 +141,14 @@ def suggest_improvements(
     database_url: str,
     tables: List[str],
     use_ai: bool = False,
-    user_preferences: Optional[Dict[str, str]] = None,
+    user_preferences: Optional[Optional[Dict[str, str]]] = None,
 ) -> List[SchemaRecommendation]:
     """
     Generate comprehensive improvement suggestions for multiple tables.
 
     Args:
         database_url: Database connection URL
-        tables: List of table names to analyze
+        tables: List[Any] of table names to analyze
         use_ai: Whether to include AI-powered recommendations
         user_preferences: User preferences for recommendations
 
@@ -294,7 +297,7 @@ def _suggest_dimension_tables(engine: Engine, table: str) -> List[str]:
 
 
 def _get_ai_recommendations(
-    database_url: str, tables: List[str], user_preferences: Optional[Dict[str, str]] = None
+    database_url: str, tables: List[str], user_preferences: Optional[Optional[Dict[str, str]]] = None
 ) -> List[SchemaRecommendation]:
     """
     Generate AI-powered schema recommendations.
@@ -352,16 +355,35 @@ def _get_column_constraints(engine: Engine, table: str) -> Dict[str, Dict[str, b
     except SQLAlchemyError:
         # Fallback for SQLite
         try:
+            # Get basic column info
             query = text(f"PRAGMA table_info({table})")
             with engine.begin() as conn:
                 result = conn.execute(query)
                 for row in result:
                     constraints[row[1]] = {
                         "nullable": not row[3],  # not null flag
-                        "unique": False,  # Would need separate query
+                        "unique": False,  # Will be updated below
                         "primary": bool(row[5]),  # pk flag
                         "type": row[2] or "",
                     }
+                
+                # Get unique constraints for SQLite
+                try:
+                    index_query = text(f"PRAGMA index_list({table})")
+                    index_result = conn.execute(index_query)
+                    for index_row in index_result:
+                        if index_row[2]:  # unique flag
+                            index_name = index_row[1]
+                            # Get columns in this unique index
+                            info_query = text(f"PRAGMA index_info({index_name})")
+                            info_result = conn.execute(info_query)
+                            for info_row in info_result:
+                                column_name = info_row[2]
+                                if column_name in constraints:
+                                    constraints[column_name]["unique"] = True
+                except SQLAlchemyError:
+                    pass
+                    
         except SQLAlchemyError:
             pass
 
@@ -500,6 +522,11 @@ def _analyze_column_for_boolean(engine: Engine, table: str, column: str) -> Opti
                 ("true", "false"),
                 ("1", "0"),
                 ("on", "off"),
+                ("completed", "pending"),
+                ("paid", "unpaid"),
+                ("success", "failure"),
+                ("approved", "rejected"),
+                ("open", "closed"),
             ]
 
             for pattern in binary_patterns:
@@ -707,7 +734,7 @@ def _estimate_normalization_level(engine: Engine, table: str) -> int:
 def _get_ai_recommendations(
     database_url: str, 
     tables: List[str], 
-    user_preferences: Optional[Dict[str, str]] = None
+    user_preferences: Optional[Optional[Dict[str, str]]] = None
 ) -> List[SchemaRecommendation]:
     """
     Generate AI-powered schema recommendations using pattern analysis.
@@ -774,7 +801,7 @@ def _ai_analyze_indexing_opportunities(engine: Engine, table: str) -> List[Schem
     return recommendations
 
 
-def _ai_analyze_industry_patterns(engine: Engine, table: str, user_preferences: Optional[Dict[str, str]] = None) -> List[SchemaRecommendation]:
+def _ai_analyze_industry_patterns(engine: Engine, table: str, user_preferences: Optional[Optional[Dict[str, str]]] = None) -> List[SchemaRecommendation]:
     """AI analysis for industry-specific patterns and best practices."""
     recommendations = []
     
