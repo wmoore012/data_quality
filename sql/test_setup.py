@@ -144,17 +144,8 @@ class TestDatabaseSetup:
         
         # Check for common credential patterns
         forbidden_patterns = [
-            'password=',
-            'pwd=',
-            'secret=',
-            'token=',
-            'key=',
-        ]
-        
-        for pattern in forbidden_patterns:
-            # Allow pattern in comments or variable names, but not assignments
-            lines_with_pattern = [
-                line for line in content.split('\n') 
+            'password = "[REDACTED]"pwd=',
+            'secret = "[REDACTED]"token = "[REDACTED]"key = "[REDACTED]"\n') 
                 if pattern in line.lower() and not line.strip().startswith('#')
             ]
             
