@@ -45,7 +45,7 @@ jobs:
           --verbose
 
     - name: Upload Data Quality Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v5
       if: always()
       with:
         name: data-quality-report
@@ -101,7 +101,7 @@ jobs:
           --verbose
 
     - name: Upload Production Report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v5
       with:
         name: production-health-report
         path: prod-health-report.json
