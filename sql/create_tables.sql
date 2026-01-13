@@ -1,5 +1,5 @@
 -- SPDX-License-Identifier: MIT
--- Copyright (c) 2024 MusicScope
+-- Copyright (c) 2025 Perday CatalogLAB™
 
 -- Data Quality Module Tables
 -- Module-specific tables for validation rules and results
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS data_quality_rules (
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
+
     INDEX idx_table_active (table_name, is_active),
     INDEX idx_severity (severity),
     INDEX idx_rule_type (rule_type)
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS data_quality_results (
     details JSON,
     scan_duration_ms INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
+
     FOREIGN KEY (rule_id) REFERENCES data_quality_rules(rule_id),
     INDEX idx_scan_timestamp (scan_timestamp DESC),
     INDEX idx_table_severity (table_name, severity),
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS data_quality_thresholds (
     critical_threshold DECIMAL(10,4),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
+
     UNIQUE KEY uk_table_metric (table_name, metric_name),
     INDEX idx_table_active (table_name, is_active)
 ) ENGINE=InnoDB COMMENT='Quality metric thresholds';

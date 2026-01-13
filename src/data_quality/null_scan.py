@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, List, Optional, Any
+from typing import Iterable, Optional
 
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
@@ -13,7 +13,7 @@ def quick_null_scan(
     engine: Engine,
     table_patterns: Optional[Optional[Iterable[str]]] = None,
     key_like: Optional[Iterable[str]] = ("id", "_id", "isrc"),
-) -> Dict[str, Dict[str, int]]:
+) -> dict[str, dict[str, int]]:
     """
     Return {table: {column: null_count}} for columns whose names hint at keys.
 
@@ -23,12 +23,16 @@ def quick_null_scan(
     patterns = list(table_patterns or [])
     like_terms = list(key_like or [])
 
-    results: Dict[str, Dict[str, int]] = {}
+    results: dict[str, dict[str, int]] = {}
 
     # Find candidate tables
     # Works on MySQL and SQLite (fallback by scanning sqlite_master)
     try:
-        tables = _list_tables_mysql(engine, patterns) if patterns else _list_tables_generic(engine)
+        tables = (
+            _list_tables_mysql(engine, patterns)
+            if patterns
+            else _list_tables_generic(engine)
+        )
     except Exception:
         tables = _list_tables_generic(engine)
 
@@ -37,7 +41,7 @@ def quick_null_scan(
         keyish = [c for c in cols if any(term in c for term in like_terms)]
         if not keyish:
             continue
-        nulls: Dict[str, int] = {}
+        nulls: dict[str, int] = {}
         for c in keyish:
             q = text(
                 f"SELECT COUNT(*) AS n FROM {t} WHERE {c} IS NULL"
@@ -51,7 +55,7 @@ def quick_null_scan(
     return results
 
 
-def _list_tables_mysql(engine: Engine, patterns: List[str]) -> List[str]:
+def _list_tables_mysql(engine: Engine, patterns: list[str]) -> list[str]:
     q = text(
         """
         SELECT table_name
@@ -67,7 +71,7 @@ def _list_tables_mysql(engine: Engine, patterns: List[str]) -> List[str]:
         return [r[0] for r in conn.execute(q, params)]
 
 
-def _list_tables_generic(engine: Engine) -> List[str]:
+def _list_tables_generic(engine: Engine) -> list[str]:
     # SQLite: read sqlite_master
     try:
         q = text("SELECT name FROM sqlite_master WHERE type='table'")
@@ -77,7 +81,7 @@ def _list_tables_generic(engine: Engine) -> List[str]:
         return []
 
 
-def _list_columns(engine: Engine, table: str) -> List[str]:
+def _list_columns(engine: Engine, table: str) -> list[str]:
     # Try pragma (SQLite), else information_schema (MySQL)
     try:
         q = text(f"PRAGMA table_info({table})")

@@ -11,7 +11,7 @@ orphan record identification, and comprehensive quality reporting.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Optional
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
@@ -38,12 +38,14 @@ class HealthReport:
 
     all_good: bool
     total_issues: int
-    issues_by_severity: List[QualityIssue]
-    summary: Dict[str, int]  # {"critical": 2, "warning": 5, "info": 1}
+    issues_by_severity: list[QualityIssue]
+    summary: dict[str, int]  # {"critical": 2, "warning": 5, "info": 1}
     scan_time_ms: int
 
 
-def scan_nulls(database_url: str, table_patterns: Optional[Optional[List[str]]] = None) -> List[QualityIssue]:
+def scan_nulls(
+    database_url: str, table_patterns: Optional[Optional[list[str]]] = None
+) -> list[QualityIssue]:
     """
     Scan database for null values in key columns with detailed reporting.
 
@@ -66,7 +68,7 @@ def scan_nulls(database_url: str, table_patterns: Optional[Optional[List[str]]] 
         # Test connection first
         with engine.begin() as conn:
             conn.execute(text("SELECT 1"))
-        
+
         # Get all tables or filter by patterns
         tables = _get_tables(engine, table_patterns)
 
@@ -96,7 +98,7 @@ def scan_nulls(database_url: str, table_patterns: Optional[Optional[List[str]]] 
                     )
                     issues.append(issue)
 
-    except (SQLAlchemyError, OSError, IOError) as e:
+    except (SQLAlchemyError, OSError) as e:
         # Create an error issue
         issue = QualityIssue(
             table="",
@@ -127,8 +129,8 @@ def scan_nulls(database_url: str, table_patterns: Optional[Optional[List[str]]] 
 
 
 def scan_orphans(
-    database_url: str, table_patterns: Optional[Optional[List[str]]] = None
-) -> List[QualityIssue]:
+    database_url: str, table_patterns: Optional[Optional[list[str]]] = None
+) -> list[QualityIssue]:
     """
     Scan database for orphaned records (foreign keys pointing to missing records).
 
@@ -151,7 +153,7 @@ def scan_orphans(
         # Test connection first
         with engine.begin() as conn:
             conn.execute(text("SELECT 1"))
-        
+
         # Get all tables or filter by patterns
         tables = _get_tables(engine, table_patterns)
 
@@ -159,7 +161,9 @@ def scan_orphans(
             foreign_keys = _get_foreign_keys(engine, table)
 
             for fk_column, ref_table, ref_column in foreign_keys:
-                orphan_count = _get_orphan_count(engine, table, fk_column, ref_table, ref_column)
+                orphan_count = _get_orphan_count(
+                    engine, table, fk_column, ref_table, ref_column
+                )
 
                 if orphan_count > 0:
                     total_rows = _get_row_count(engine, table)
@@ -177,7 +181,7 @@ def scan_orphans(
                     )
                     issues.append(issue)
 
-    except (SQLAlchemyError, OSError, IOError) as e:
+    except (SQLAlchemyError, OSError) as e:
         issue = QualityIssue(
             table="",
             column="",
@@ -205,7 +209,9 @@ def scan_orphans(
     return issues
 
 
-def health_check(database_url: str, table_patterns: Optional[Optional[List[str]]] = None) -> HealthReport:
+def health_check(
+    database_url: str, table_patterns: Optional[Optional[list[str]]] = None
+) -> HealthReport:
     """
     Perform comprehensive database health check covering common issues.
 
@@ -245,7 +251,9 @@ def health_check(database_url: str, table_patterns: Optional[Optional[List[str]]
 
     # Sort by severity (critical first)
     severity_order = {"critical": 0, "warning": 1, "info": 2}
-    all_issues.sort(key=lambda x: (severity_order.get(x.severity, 3), x.table, x.column))
+    all_issues.sort(
+        key=lambda x: (severity_order.get(x.severity, 3), x.table, x.column)
+    )
 
     # Create summary
     summary = {"critical": 0, "warning": 0, "info": 0}
@@ -263,7 +271,9 @@ def health_check(database_url: str, table_patterns: Optional[Optional[List[str]]
     )
 
 
-def _get_tables(engine: Engine, patterns: Optional[Optional[List[str]]] = None) -> List[str]:
+def _get_tables(
+    engine: Engine, patterns: Optional[Optional[list[str]]] = None
+) -> list[str]:
     """Get list of tables, optionally filtered by patterns."""
     try:
         # Try MySQL/PostgreSQL approach
@@ -273,9 +283,9 @@ def _get_tables(engine: Engine, patterns: Optional[Optional[List[str]]] = None) 
             )
             query = text(
                 f"""
-                SELECT table_name 
-                FROM information_schema.tables 
-                WHERE table_schema = DATABASE() 
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = DATABASE()
                 AND ({pattern_conditions})
                 ORDER BY table_name
             """
@@ -284,8 +294,8 @@ def _get_tables(engine: Engine, patterns: Optional[Optional[List[str]]] = None) 
         else:
             query = text(
                 """
-                SELECT table_name 
-                FROM information_schema.tables 
+                SELECT table_name
+                FROM information_schema.tables
                 WHERE table_schema = DATABASE()
                 ORDER BY table_name
             """
@@ -299,7 +309,9 @@ def _get_tables(engine: Engine, patterns: Optional[Optional[List[str]]] = None) 
     except SQLAlchemyError:
         # Fallback for SQLite
         try:
-            query = text("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
+            query = text(
+                "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+            )
             with engine.begin() as conn:
                 result = conn.execute(query)
                 tables = [row[0] for row in result]
@@ -318,18 +330,18 @@ def _get_tables(engine: Engine, patterns: Optional[Optional[List[str]]] = None) 
             return []
 
 
-def _get_key_columns(engine: Engine, table: str) -> List[str]:
+def _get_key_columns(engine: Engine, table: str) -> list[str]:
     """Get columns that are likely to be important (IDs, keys, emails, etc.)."""
     try:
         # Try MySQL/PostgreSQL approach first
         query = text(
             """
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_schema = DATABASE() 
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE()
             AND table_name = :table
-            AND (column_name LIKE '%id%' 
-                 OR column_name LIKE '%key%' 
+            AND (column_name LIKE '%id%'
+                 OR column_name LIKE '%key%'
                  OR column_name = 'isrc'
                  OR column_name LIKE '%email%'
                  OR column_name LIKE '%_code'
@@ -406,13 +418,13 @@ def _get_null_count(engine: Engine, table: str, column: str) -> int:
         return 0
 
 
-def _get_foreign_keys(engine: Engine, table: str) -> List[Tuple[str, str, str]]:
+def _get_foreign_keys(engine: Engine, table: str) -> list[tuple[str, str, str]]:
     """Get foreign key relationships for a table."""
     try:
         # Try MySQL approach
         query = text(
             """
-            SELECT 
+            SELECT
                 column_name,
                 referenced_table_name,
                 referenced_column_name
@@ -440,10 +452,10 @@ def _get_orphan_count(
     try:
         query = text(
             f"""
-            SELECT COUNT(*) 
+            SELECT COUNT(*)
             FROM {table} t
             LEFT JOIN {ref_table} r ON t.{fk_column} = r.{ref_column}
-            WHERE t.{fk_column} IS NOT NULL 
+            WHERE t.{fk_column} IS NOT NULL
             AND r.{ref_column} IS NULL
         """
         )
@@ -456,8 +468,8 @@ def _get_orphan_count(
 
 
 def _scan_duplicates(
-    database_url: str, table_patterns: Optional[Optional[List[str]]] = None
-) -> List[QualityIssue]:
+    database_url: str, table_patterns: Optional[Optional[list[str]]] = None
+) -> list[QualityIssue]:
     """Scan for duplicate records in key columns."""
     engine = create_engine(database_url)
     issues = []
@@ -474,7 +486,9 @@ def _scan_duplicates(
 
                 if duplicate_count > 0:
                     total_rows = _get_row_count(engine, table)
-                    percent = (duplicate_count / total_rows) * 100 if total_rows > 0 else 0
+                    percent = (
+                        (duplicate_count / total_rows) * 100 if total_rows > 0 else 0
+                    )
 
                     issue = QualityIssue(
                         table=table,
@@ -494,15 +508,15 @@ def _scan_duplicates(
     return issues
 
 
-def _get_unique_candidate_columns(engine: Engine, table: str) -> List[str]:
+def _get_unique_candidate_columns(engine: Engine, table: str) -> list[str]:
     """Get columns that should probably be unique (like ISRCs, IDs, etc.)."""
     try:
         # Try MySQL/PostgreSQL approach
         query = text(
             """
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_schema = DATABASE() 
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE()
             AND table_name = :table
             AND (column_name = 'isrc'
                  OR column_name LIKE '%_code'

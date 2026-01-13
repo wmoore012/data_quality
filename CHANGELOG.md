@@ -1,5 +1,5 @@
 <!-- SPDX-License-Identifier: MIT
-Copyright (c) 2024 MusicScope -->
+Copyright (c) 2025 Perday CatalogLAB™ -->
 
 # Changelog
 
@@ -41,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - No string concatenation in SQL paths
 - Input validation and sanitization
 
-## [0.1.0] - 2024-12-XX
+## [0.1.0] - 2025-12-XX
 
 ### Added
 - Initial development version
@@ -56,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Version Bumping
 
 - **Patch** (1.0.1): Bug fixes, no breaking changes
-- **Minor** (1.1.0): New features, backward compatible  
+- **Minor** (1.1.0): New features, backward compatible
 - **Major** (2.0.0): Breaking changes
 
 ### Release Checklist
@@ -71,4 +71,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-For detailed information about changes, see the [commit history](https://github.com/your-org/icat-data-quality/commits/main).
+For detailed information about changes, see the [commit history](https://github.com/wmoore012/icat-data-quality/commits/main).

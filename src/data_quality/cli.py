@@ -9,13 +9,15 @@ Provides easy-to-use commands for database quality scanning with colorful output
 
 import os
 import sys
-from typing import Optional, Any
+from typing import Optional
 
 import click
 
+from .advanced_analysis import (
+    analyze_database_completeness,
+)
 from .quality_scanner import health_check, scan_nulls, scan_orphans
 from .schema_analyzer import analyze_schema, suggest_improvements
-from .advanced_analysis import analyze_database_completeness, identify_impossible_columns
 
 
 @click.group()
@@ -32,12 +34,20 @@ def cli() -> None:
 )
 @click.option("--tables", "-t", help="Comma-separated table patterns to scan")
 @click.option(
-    "--format", "-f", type=click.Choice(["text", "json"]), default="text", help="Output format"
+    "--format",
+    "-f",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
 )
 @click.option(
-    "--no-recommendations", is_flag=True, help="Disable schema improvement recommendations"
+    "--no-recommendations",
+    is_flag=True,
+    help="Disable schema improvement recommendations",
 )
-@click.option("--use-ai", is_flag=True, help="Enable AI-powered suggestions (requires API keys)")
+@click.option(
+    "--use-ai", is_flag=True, help="Enable AI-powered suggestions (requires API keys)"
+)
 def check(
     database_url: Optional[str],
     tables: Optional[str],
@@ -96,20 +106,22 @@ def check(
                 click.echo("✅ This means: All data integrity checks passed")
                 click.echo("✅ This means: System is working flawlessly")
             else:
-                critical_count = report.summary.get('critical', 0)
-                warning_count = report.summary.get('warning', 0)
-                info_count = report.summary.get('info', 0)
-                
+                critical_count = report.summary.get("critical", 0)
+                warning_count = report.summary.get("warning", 0)
+                info_count = report.summary.get("info", 0)
+
                 if critical_count == 0:
-                    click.echo(f"✅ Found {report.total_issues} data quality issues (0 critical - GOOD!):")
+                    click.echo(
+                        f"✅ Found {report.total_issues} data quality issues (0 critical - GOOD!):"
+                    )
                 else:
                     click.echo(f"❌ Found {report.total_issues} data quality issues:")
-                
+
                 if critical_count == 0:
-                    click.echo(f"   🎉 Critical: 0 (PERFECT!)")
+                    click.echo("   🎉 Critical: 0 (PERFECT!)")
                 else:
                     click.echo(f"   Critical: {critical_count}")
-                    
+
                 click.echo(f"   Warning:  {warning_count}")
                 click.echo(f"   Info:     {info_count}")
                 click.echo()
@@ -119,7 +131,9 @@ def check(
                         issue.severity, "⚪"
                     )
 
-                    click.echo(f"{severity_icon} {issue.severity.upper()}: {issue.description}")
+                    click.echo(
+                        f"{severity_icon} {issue.severity.upper()}: {issue.description}"
+                    )
 
             click.echo(f"\nScan completed in {report.scan_time_ms}ms")
 
@@ -205,11 +219,17 @@ def orphans(database_url: Optional[str], tables: Optional[str]) -> None:
     help="Database URL (mysql://user:pass@host/db, postgresql://user:pass@host/db)",
 )
 @click.option("--table", "-t", required=True, help="Table name to analyze")
-@click.option("--no-normalization", is_flag=True, help="Disable normalization suggestions")
-@click.option("--no-boolean-suggestions", is_flag=True, help="Disable boolean column suggestions")
+@click.option(
+    "--no-normalization", is_flag=True, help="Disable normalization suggestions"
+)
+@click.option(
+    "--no-boolean-suggestions", is_flag=True, help="Disable boolean column suggestions"
+)
 @click.option("--no-fact-analysis", is_flag=True, help="Disable fact table analysis")
 @click.option(
-    "--generate-sql", is_flag=True, help="Generate ALTER TABLE statements for recommendations"
+    "--generate-sql",
+    is_flag=True,
+    help="Generate ALTER TABLE statements for recommendations",
 )
 def analyze(
     database_url: Optional[str],
@@ -240,7 +260,9 @@ def analyze(
         )
 
         # Display results with colors
-        click.echo(f"\n🔍 Schema Analysis for table: {click.style(table, fg='cyan', bold=True)}")
+        click.echo(
+            f"\n🔍 Schema Analysis for table: {click.style(table, fg='cyan', bold=True)}"
+        )
         click.echo("=" * 50)
 
         # Natural keys
@@ -281,7 +303,9 @@ def analyze(
         nf_color = (
             "green"
             if analysis.normalization_level >= 3
-            else "yellow" if analysis.normalization_level == 2 else "red"
+            else "yellow"
+            if analysis.normalization_level == 2
+            else "red"
         )
         click.echo(
             f"\n📐 Normalization Level: {click.style(f'{analysis.normalization_level}NF', fg=nf_color)}"
@@ -291,10 +315,14 @@ def analyze(
         if analysis.recommendations:
             click.echo("\n🚀 Recommendations:")
             for i, rec in enumerate(analysis.recommendations, 1):
-                priority_color = {"high": "red", "medium": "yellow", "low": "green"}.get(
-                    rec.priority, "white"
+                priority_color = {
+                    "high": "red",
+                    "medium": "yellow",
+                    "low": "green",
+                }.get(rec.priority, "white")
+                priority_icon = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(
+                    rec.priority, "⚪"
                 )
-                priority_icon = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(rec.priority, "⚪")
 
                 click.echo(
                     f"\n   {i}. {priority_icon} {click.style(rec.priority.upper(), fg=priority_color, bold=True)}: {rec.description}"
@@ -304,7 +332,9 @@ def analyze(
                     click.echo(f"      Benefits: {', '.join(rec.benefits)}")
 
                 if generate_sql and rec.sql_example:
-                    click.echo(f"\n      {click.style('SQL Example:', fg='blue', bold=True)}")
+                    click.echo(
+                        f"\n      {click.style('SQL Example:', fg='blue', bold=True)}"
+                    )
                     for line in rec.sql_example.split("\n"):
                         if line.strip():
                             click.echo(f"      {click.style(line, fg='cyan')}")
@@ -325,7 +355,9 @@ def analyze(
     help="Database URL (mysql://user:pass@host/db, postgresql://user:pass@host/db)",
 )
 @click.option("--tables", "-t", help="Comma-separated table names to analyze")
-@click.option("--use-ai", is_flag=True, help="Include AI-powered recommendations (experimental)")
+@click.option(
+    "--use-ai", is_flag=True, help="Include AI-powered recommendations (experimental)"
+)
 def suggest(database_url: Optional[str], tables: Optional[str], use_ai: bool) -> None:
     """Get comprehensive improvement suggestions for multiple tables."""
 
@@ -366,20 +398,28 @@ def suggest(database_url: Optional[str], tables: Optional[str], use_ai: bool) ->
             (low_priority, "LOW PRIORITY", "green", "🟢"),
         ]:
             if priority_group:
-                click.echo(f"\n{icon} {click.style(priority_name, fg=color, bold=True)}")
+                click.echo(
+                    f"\n{icon} {click.style(priority_name, fg=color, bold=True)}"
+                )
                 click.echo("-" * 30)
 
                 for i, suggestion in enumerate(priority_group, 1):
                     click.echo(f"\n{i}. {suggestion.description}")
                     if suggestion.benefits:
                         click.echo(f"   Benefits: {', '.join(suggestion.benefits)}")
-                    click.echo(f"   Effort: {click.style(suggestion.effort_level, fg='cyan')}")
+                    click.echo(
+                        f"   Effort: {click.style(suggestion.effort_level, fg='cyan')}"
+                    )
 
                     if suggestion.sql_example:
-                        click.echo(f"   {click.style('SQL Example:', fg='blue', bold=True)}")
-                        for line in suggestion.sql_example.split('\n'):
+                        click.echo(
+                            f"   {click.style('SQL Example:', fg='blue', bold=True)}"
+                        )
+                        for line in suggestion.sql_example.split("\n"):
                             if line.strip():
-                                click.echo(f"      {click.style(line.strip(), fg='cyan')}")
+                                click.echo(
+                                    f"      {click.style(line.strip(), fg='cyan')}"
+                                )
 
     except Exception as e:
         click.echo(f"❌ Error: {str(e)}", err=True)
@@ -394,9 +434,17 @@ def suggest(database_url: Optional[str], tables: Optional[str], use_ai: bool) ->
 )
 @click.option("--tables", "-t", help="Comma-separated table patterns to analyze")
 @click.option(
-    "--format", "-f", type=click.Choice(["text", "json"]), default="text", help="Output format"
+    "--format",
+    "-f",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
 )
-@click.option("--include-impossible", is_flag=True, help="Include impossible-to-fill column detection")
+@click.option(
+    "--include-impossible",
+    is_flag=True,
+    help="Include impossible-to-fill column detection",
+)
 def completeness(
     database_url: Optional[str],
     tables: Optional[str],
@@ -422,13 +470,12 @@ def completeness(
     try:
         # Run completeness analysis
         analysis = analyze_database_completeness(
-            db_url, 
-            table_patterns, 
-            include_impossible_detection=include_impossible
+            db_url, table_patterns, include_impossible_detection=include_impossible
         )
 
         if format == "json":
             import json
+
             # Convert to JSON-serializable format
             json_data = {
                 "overall_completeness_score": analysis.overall_completeness_score,
@@ -446,46 +493,76 @@ def completeness(
                         "perfect_columns": table.perfect_columns,
                         "critical_columns": table.critical_columns,
                         "impossible_columns": table.impossible_columns,
-                        "recommendations": table.recommendations
+                        "recommendations": table.recommendations,
                     }
                     for table in analysis.tables
-                ]
+                ],
             }
             click.echo(json.dumps(json_data, indent=2))
         else:
             # Text format output
-            click.echo(f"\n📊 Database Completeness Analysis")
+            click.echo("\n📊 Database Completeness Analysis")
             click.echo("=" * 50)
-            
+
             # Overall statistics
-            score_color = "green" if analysis.overall_completeness_score >= 85 else "yellow" if analysis.overall_completeness_score >= 70 else "red"
-            click.echo(f"\n🎯 Overall Completeness: {click.style(f'{analysis.overall_completeness_score:.1f}%', fg=score_color, bold=True)}")
+            score_color = (
+                "green"
+                if analysis.overall_completeness_score >= 85
+                else "yellow"
+                if analysis.overall_completeness_score >= 70
+                else "red"
+            )
+            click.echo(
+                f"\n🎯 Overall Completeness: {click.style(f'{analysis.overall_completeness_score:.1f}%', fg=score_color, bold=True)}"
+            )
             click.echo(f"📋 Tables Analyzed: {analysis.total_tables}")
             click.echo(f"📊 Total Columns: {analysis.total_columns}")
-            click.echo(f"✅ Perfect Columns: {click.style(str(analysis.perfect_columns_count), fg='green')}")
-            click.echo(f"❌ Critical Columns: {click.style(str(analysis.critical_columns_count), fg='red')}")
-            
+            click.echo(
+                f"✅ Perfect Columns: {click.style(str(analysis.perfect_columns_count), fg='green')}"
+            )
+            click.echo(
+                f"❌ Critical Columns: {click.style(str(analysis.critical_columns_count), fg='red')}"
+            )
+
             if include_impossible:
-                click.echo(f"🚫 Impossible Columns: {click.style(str(analysis.impossible_columns_count), fg='yellow')}")
-            
+                click.echo(
+                    f"🚫 Impossible Columns: {click.style(str(analysis.impossible_columns_count), fg='yellow')}"
+                )
+
             # Table details
             if analysis.tables:
-                click.echo(f"\n📋 Table Details:")
+                click.echo("\n📋 Table Details:")
                 for table in analysis.tables[:10]:  # Show top 10 tables
-                    score_color = "green" if table.completeness_score >= 85 else "yellow" if table.completeness_score >= 70 else "red"
-                    click.echo(f"\n  📦 {click.style(table.name, fg='cyan', bold=True)} ({table.total_rows:,} rows)")
-                    click.echo(f"     Completeness: {click.style(f'{table.completeness_score:.1f}%', fg=score_color)}")
-                    
+                    score_color = (
+                        "green"
+                        if table.completeness_score >= 85
+                        else "yellow"
+                        if table.completeness_score >= 70
+                        else "red"
+                    )
+                    click.echo(
+                        f"\n  📦 {click.style(table.name, fg='cyan', bold=True)} ({table.total_rows:,} rows)"
+                    )
+                    click.echo(
+                        f"     Completeness: {click.style(f'{table.completeness_score:.1f}%', fg=score_color)}"
+                    )
+
                     if table.perfect_columns:
-                        click.echo(f"     ✅ Perfect: {', '.join(table.perfect_columns[:5])}")
+                        click.echo(
+                            f"     ✅ Perfect: {', '.join(table.perfect_columns[:5])}"
+                        )
                     if table.critical_columns:
-                        click.echo(f"     ❌ Critical: {click.style(', '.join(table.critical_columns[:5]), fg='red')}")
+                        click.echo(
+                            f"     ❌ Critical: {click.style(', '.join(table.critical_columns[:5]), fg='red')}"
+                        )
                     if include_impossible and table.impossible_columns:
-                        click.echo(f"     🚫 Impossible: {click.style(', '.join(table.impossible_columns[:3]), fg='yellow')}")
-            
+                        click.echo(
+                            f"     🚫 Impossible: {click.style(', '.join(table.impossible_columns[:3]), fg='yellow')}"
+                        )
+
             # Summary recommendations
             if analysis.summary_recommendations:
-                click.echo(f"\n💡 Recommendations:")
+                click.echo("\n💡 Recommendations:")
                 for i, rec in enumerate(analysis.summary_recommendations[:5], 1):
                     click.echo(f"   {i}. {rec}")
 

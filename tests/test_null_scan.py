@@ -9,7 +9,9 @@ def test_quick_null_scan_counts_nulls():
     eng = create_engine("sqlite+pysqlite:///:memory:")
     with eng.begin() as conn:
         conn.execute(
-            text("CREATE TABLE songs (id INTEGER PRIMARY KEY, isrc TEXT, artist_id INTEGER)")
+            text(
+                "CREATE TABLE songs (id INTEGER PRIMARY KEY, isrc TEXT, artist_id INTEGER)"
+            )
         )
         conn.execute(
             text(

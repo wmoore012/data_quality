@@ -19,33 +19,34 @@ Example usage:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal, Optional
 
 __all__ = [
     "DataQualityError",
-    "ValidationError", 
+    "ValidationError",
     "ConfigurationError",
     "ResourceError",
     "OperationError",
     "ScanError",
-    "SchemaAnalysisError"
+    "SchemaAnalysisError",
 ]
 
 
 class DataQualityError(Exception):
     """Base exception for all data-quality errors."""
-    
+
     def __init__(
-        self, 
-        message: str, 
-        details: Optional[Optional[Dict[str, Any]]] = None,
+        self,
+        message: str,
+        details: Optional[Optional[dict[str, Any]]] = None,
         suggestion: Optional[Optional[str]] = None,
-        code: Literal["unknown", "validation", "configuration", "resource", "operation"] = "unknown"
+        code: Literal[
+            "unknown", "validation", "configuration", "resource", "operation"
+        ] = "unknown",
     ) -> None:
         """
         Initialize the exception with detailed error information.
-        
+
         Args:
             message: Human-readable error message
             details: Additional error context and debugging information
@@ -57,34 +58,34 @@ class DataQualityError(Exception):
         self.details = details or {}
         self.suggestion = suggestion
         self.code = code
-    
+
     def __str__(self) -> str:
         """Return formatted error message with details and suggestions."""
         result = self.message
-        
+
         if self.details:
             details_str = ", ".join(f"{k}={v}" for k, v in self.details.items())
             result += f" (Details: {details_str})"
-        
+
         if self.suggestion:
             result += f" Suggestion: {self.suggestion}"
-        
+
         return result
 
 
 class ValidationError(DataQualityError):
     """Raised when input validation fails."""
-    
+
     def __init__(
-        self, 
-        field: str, 
-        value: Any, 
+        self,
+        field: str,
+        value: Any,
         expected: str,
-        suggestion: Optional[Optional[str]] = None
+        suggestion: Optional[Optional[str]] = None,
     ) -> None:
         """
         Initialize validation error with field-specific information.
-        
+
         Args:
             field: Name of the field that failed validation
             value: The invalid value that was provided
@@ -101,16 +102,13 @@ class ValidationError(DataQualityError):
 
 class ConfigurationError(DataQualityError):
     """Raised when configuration is invalid or missing."""
-    
+
     def __init__(
-        self, 
-        config_key: str, 
-        issue: str,
-        suggestion: Optional[Optional[str]] = None
+        self, config_key: str, issue: str, suggestion: Optional[Optional[str]] = None
     ) -> None:
         """
         Initialize configuration error.
-        
+
         Args:
             config_key: The configuration key that has an issue
             issue: Description of the configuration problem
@@ -125,17 +123,17 @@ class ConfigurationError(DataQualityError):
 
 class ResourceError(DataQualityError):
     """Raised when system resources are unavailable or exhausted."""
-    
+
     def __init__(
-        self, 
-        resource: str, 
+        self,
+        resource: str,
         issue: str,
         current_usage: Optional[Optional[str]] = None,
-        suggestion: Optional[Optional[str]] = None
+        suggestion: Optional[Optional[str]] = None,
     ) -> None:
         """
         Initialize resource error.
-        
+
         Args:
             resource: The resource that is unavailable (memory, disk, network, etc.)
             issue: Description of the resource problem
@@ -154,17 +152,17 @@ class ResourceError(DataQualityError):
 
 class OperationError(DataQualityError):
     """Raised when an operation fails due to business logic or external factors."""
-    
+
     def __init__(
-        self, 
-        operation: str, 
+        self,
+        operation: str,
         reason: str,
         retryable: bool = False,
-        suggestion: Optional[Optional[str]] = None
+        suggestion: Optional[Optional[str]] = None,
     ) -> None:
         """
         Initialize operation error.
-        
+
         Args:
             operation: The operation that failed
             reason: Why the operation failed
@@ -181,18 +179,19 @@ class OperationError(DataQualityError):
 
 class ScanError(OperationError):
     """Raised when data quality scan fails."""
-    
+
     def __init__(
-        self, 
+        self,
         table_name: str,
         scan_type: str,
         error_message: str,
-        suggestion: Optional[Optional[str]] = None
+        suggestion: Optional[Optional[str]] = None,
     ) -> None:
         super().__init__(
-            f"{scan_type}_scan", 
+            f"{scan_type}_scan",
             f"Failed to scan table '{table_name}': {error_message}",
-            suggestion=suggestion or "Check table permissions and database connectivity"
+            suggestion=suggestion
+            or "Check table permissions and database connectivity",
         )
         self.table_name = table_name
         self.scan_type = scan_type
@@ -201,18 +200,18 @@ class ScanError(OperationError):
 
 class SchemaAnalysisError(OperationError):
     """Raised when schema analysis fails."""
-    
+
     def __init__(
-        self, 
+        self,
         schema_name: str,
         analysis_type: str,
         error_message: str,
-        suggestion: Optional[Optional[str]] = None
+        suggestion: Optional[Optional[str]] = None,
     ) -> None:
         super().__init__(
-            f"{analysis_type}_analysis", 
+            f"{analysis_type}_analysis",
             f"Failed to analyze schema '{schema_name}': {error_message}",
-            suggestion=suggestion or "Ensure schema exists and is accessible"
+            suggestion=suggestion or "Ensure schema exists and is accessible",
         )
         self.schema_name = schema_name
         self.analysis_type = analysis_type

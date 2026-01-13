@@ -1,5 +1,5 @@
 <!-- SPDX-License-Identifier: MIT
-Copyright (c) 2024 MusicScope -->
+Copyright (c) 2025 Perday CatalogLAB™ -->
 
 # Error Handling Guide
 
@@ -39,7 +39,7 @@ def retry_with_backoff(
 ) -> T:
     """
     Retry a function with exponential backoff and jitter.
-    
+
     Args:
         func: Function to retry
         max_attempts: Maximum number of attempts
@@ -47,38 +47,38 @@ def retry_with_backoff(
         max_delay: Maximum delay in seconds
         jitter: Add random jitter to prevent thundering herd
         retryable_exceptions: Exception types that should trigger retry
-    
+
     Returns:
         Result of successful function call
-        
+
     Raises:
         Last exception if all attempts fail
     """
     last_exception = None
-    
+
     for attempt in range(max_attempts):
         try:
             return func()
         except retryable_exceptions as e:
             last_exception = e
-            
+
             # Check if this specific error is retryable
             if hasattr(e, 'retryable') and not e.retryable:
                 raise
-            
+
             if attempt == max_attempts - 1:
                 # Last attempt, don't wait
                 break
-            
+
             # Calculate delay with exponential backoff
             delay = min(base_delay * (2 ** attempt), max_delay)
-            
+
             # Add jitter to prevent thundering herd
             if jitter:
                 delay *= (0.5 + random.random() * 0.5)
-            
+
             time.sleep(delay)
-    
+
     # All attempts failed
     raise last_exception
 
@@ -120,7 +120,7 @@ def redact_sensitive_info(message: str) -> str:
 def safe_log_error(logger: logging.Logger, message: str, details: Dict[str, Any] = None):
     """Log error with automatic sensitive data redaction."""
     safe_message = redact_sensitive_info(message)
-    
+
     if details:
         # Redact details as well
         safe_details = {
@@ -150,7 +150,7 @@ from typing import Any, Dict
 
 class StructuredFormatter(logging.Formatter):
     """JSON formatter for structured logging."""
-    
+
     def format(self, record: logging.LogRecord) -> str:
         log_entry = {
             'timestamp': self.formatTime(record),
@@ -161,11 +161,11 @@ class StructuredFormatter(logging.Formatter):
             'function': record.funcName,
             'line': record.lineno,
         }
-        
+
         # Add exception info if present
         if record.exc_info:
             log_entry['exception'] = self.formatException(record.exc_info)
-        
+
         # Add custom fields
         if hasattr(record, 'operation'):
             log_entry['operation'] = record.operation
@@ -173,7 +173,7 @@ class StructuredFormatter(logging.Formatter):
             log_entry['table_name'] = record.table_name
         if hasattr(record, 'duration_ms'):
             log_entry['duration_ms'] = record.duration_ms
-        
+
         return json.dumps(log_entry)
 
 # Setup structured logging
@@ -188,7 +188,7 @@ def setup_logging():
 # Usage with extra context
 logger = setup_logging()
 logger.info(
-    "Table scan completed", 
+    "Table scan completed",
     extra={
         'operation': 'null_scan',
         'table_name': 'users',
@@ -222,7 +222,7 @@ def scan_table(engine, table_name):
         # For unexpected errors, chain but don't hide implementation details
         raise ScanError(
             table_name=table_name,
-            scan_type="count", 
+            scan_type="count",
             error_message=f"Unexpected error: {type(e).__name__}",
             suggestion="Check logs for full error details"
         ) from e
@@ -255,19 +255,19 @@ def database_operation(engine, operation_name: str) -> Generator[Any, None, None
     """Context manager for database operations with proper cleanup and logging."""
     logger = logging.getLogger(__name__)
     start_time = time.time()
-    
+
     logger.info(f"Starting {operation_name}")
-    
+
     try:
         with engine.begin() as conn:
             yield conn
-        
+
         duration = (time.time() - start_time) * 1000
         logger.info(
             f"Completed {operation_name}",
             extra={'operation': operation_name, 'duration_ms': duration}
         )
-        
+
     except Exception as e:
         duration = (time.time() - start_time) * 1000
         logger.error(
@@ -298,10 +298,10 @@ def test_scan_nulls_handles_database_error():
     """Test that database errors are properly wrapped."""
     mock_engine = Mock()
     mock_engine.execute.side_effect = SQLAlchemyError("Connection lost")
-    
+
     with pytest.raises(ScanError) as exc_info:
         scan_nulls(mock_engine, "test_table")
-    
+
     error = exc_info.value
     assert error.table_name == "test_table"
     assert error.scan_type == "null"
@@ -311,14 +311,14 @@ def test_scan_nulls_handles_database_error():
 def test_retry_mechanism():
     """Test retry with exponential backoff."""
     call_count = 0
-    
+
     def failing_function():
         nonlocal call_count
         call_count += 1
         if call_count < 3:
             raise ResourceError("resource", "temporarily unavailable", retryable=True)
         return "success"
-    
+
     result = retry_with_backoff(failing_function, max_attempts=3)
     assert result == "success"
     assert call_count == 3

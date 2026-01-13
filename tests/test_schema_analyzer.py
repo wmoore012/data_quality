@@ -12,19 +12,19 @@ These tests define the expected behavior for:
 """
 
 from unittest.mock import patch
-from sqlalchemy import create_engine, text
 
 from data_quality.schema_analyzer import (
-    analyze_schema,
-    suggest_improvements,
     SchemaAnalysis,
     SchemaRecommendation,
-    _detect_natural_keys,
     _analyze_boolean_columns,
-    _suggest_normalization,
     _detect_fact_table_candidates,
+    _detect_natural_keys,
     _suggest_boolean_replacements,
+    _suggest_normalization,
+    analyze_schema,
+    suggest_improvements,
 )
+from sqlalchemy import create_engine, text
 
 
 class TestSchemaAnalysis:
@@ -455,8 +455,13 @@ class TestSchemaAnalysisIntegration:
             )
 
         # Test individual components since in-memory DB doesn't persist across engine instances
-        from data_quality.schema_analyzer import _detect_natural_keys, _analyze_boolean_columns, _suggest_boolean_replacements, _detect_fact_table_candidates
-        
+        from data_quality.schema_analyzer import (
+            _analyze_boolean_columns,
+            _detect_fact_table_candidates,
+            _detect_natural_keys,
+            _suggest_boolean_replacements,
+        )
+
         # Should detect natural keys
         natural_keys = _detect_natural_keys(engine, "songs")
         assert "isrc" in natural_keys
@@ -472,6 +477,7 @@ class TestSchemaAnalysisIntegration:
 
         # Should detect metrics (even if not a full fact table without FKs)
         from data_quality.schema_analyzer import _get_table_columns, _is_metric_column
+
         columns = _get_table_columns(engine, "songs")
         metric_columns = [col for col in columns if _is_metric_column(col)]
         assert len(metric_columns) >= 2  # Has play_count and revenue_cents
@@ -493,7 +499,7 @@ class TestSchemaAnalysisIntegration:
             """
                 )
             )
-            
+
             # Add test data for boolean analysis
             conn.execute(
                 text(
@@ -506,12 +512,16 @@ class TestSchemaAnalysisIntegration:
             )
 
         # Test individual components since in-memory DB doesn't persist across engine instances
-        from data_quality.schema_analyzer import _detect_natural_keys, _analyze_boolean_columns, _suggest_boolean_replacements
-        
+        from data_quality.schema_analyzer import (
+            _analyze_boolean_columns,
+            _detect_natural_keys,
+            _suggest_boolean_replacements,
+        )
+
         natural_keys = _detect_natural_keys(engine, "test_table")
         boolean_columns = _analyze_boolean_columns(engine, "test_table")
         suggested_booleans = _suggest_boolean_replacements(engine, "test_table")
-        
+
         assert len(natural_keys) > 0
         assert len(boolean_columns) > 0
         assert len(suggested_booleans) > 0
@@ -614,7 +624,11 @@ class TestErrorHandling:
         assert len(analysis.recommendations) > 0
 
         # Should have error recommendation
-        error_recs = [r for r in analysis.recommendations if "failed" in r.description.lower() or "error" in r.description.lower()]
+        error_recs = [
+            r
+            for r in analysis.recommendations
+            if "failed" in r.description.lower() or "error" in r.description.lower()
+        ]
         assert len(error_recs) > 0
 
     def test_analyze_schema_nonexistent_table(self):

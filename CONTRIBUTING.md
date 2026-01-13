@@ -1,5 +1,5 @@
 <!-- SPDX-License-Identifier: MIT
-Copyright (c) 2024 Perday Labs -->
+Copyright (c) 2025 Perday Labs -->
 
 # Contributing to icat-data-quality
 
@@ -32,7 +32,7 @@ Thank you for your interest in contributing to icat-data-quality! This module fo
 ### 1. Environment Setup
 
 ```bash
-git clone https://github.com/your-username/icat-data-quality.git
+git clone https://github.com/wmoore012/icat-data-quality.git
 cd icat-data-quality
 poetry install
 ```
@@ -113,10 +113,10 @@ def test_quick_null_scan_basic_functionality():
     # Arrange
     engine = create_test_engine()
     setup_test_data(engine)
-    
+
     # Act
     result = quick_null_scan(engine, table_patterns=["test_table"])
-    
+
     # Assert
     assert "test_table" in result
     assert result["test_table"]["id"] == 0

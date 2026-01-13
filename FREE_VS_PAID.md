@@ -1,5 +1,5 @@
 <!-- SPDX-License-Identifier: MIT
-Copyright (c) 2024 MusicScope -->
+Copyright (c) 2025 Perday CatalogLAB™ -->
 
 # Free vs Paid Features - Complete Breakdown
 
@@ -128,7 +128,7 @@ data-quality analyze --use-ai --generate-sql > monthly_review.md
 
 ## 🎉 Bottom Line
 
-**This tool is production-ready and fully functional without spending a penny.** 
+**This tool is production-ready and fully functional without spending a penny.**
 
 The AI features are nice-to-have enhancements for teams that want deeper insights and have budget for API costs. But the core data quality scanning, analysis, and recommendations work perfectly without any external dependencies.
 

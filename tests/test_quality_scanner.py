@@ -8,20 +8,19 @@ These tests verify comprehensive database quality scanning including
 null detection, orphan identification, and health reporting.
 """
 
-from sqlalchemy import create_engine, text
-
 from data_quality.quality_scanner import (
+    HealthReport,
+    QualityIssue,
+    _determine_null_severity,
+    _get_key_columns,
+    _get_null_count,
+    _get_row_count,
+    _get_tables,
+    health_check,
     scan_nulls,
     scan_orphans,
-    health_check,
-    QualityIssue,
-    HealthReport,
-    _get_tables,
-    _get_key_columns,
-    _get_row_count,
-    _get_null_count,
-    _determine_null_severity,
 )
+from sqlalchemy import create_engine, text
 
 
 class TestQualityIssue:
@@ -56,8 +55,12 @@ class TestHealthReport:
     def test_health_report_creation(self):
         """Test creating a HealthReport."""
         issues = [
-            QualityIssue("users", "id", "nulls", 1, 100, 1.0, "critical", "Critical issue"),
-            QualityIssue("orders", "user_id", "orphans", 5, 50, 10.0, "warning", "Warning issue"),
+            QualityIssue(
+                "users", "id", "nulls", 1, 100, 1.0, "critical", "Critical issue"
+            ),
+            QualityIssue(
+                "orders", "user_id", "orphans", 5, 50, 10.0, "warning", "Warning issue"
+            ),
         ]
 
         report = HealthReport(
@@ -81,13 +84,13 @@ class TestScanNulls:
 
     def test_scan_nulls_with_sqlite(self):
         """Test null scanning with SQLite database."""
-        import tempfile
         import os
-        
+        import tempfile
+
         # Create temporary file database (in-memory doesn't work across connections)
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
             db_path = tmp.name
-        
+
         try:
             engine = create_engine(f"sqlite+pysqlite:///{db_path}")
 
@@ -110,7 +113,7 @@ class TestScanNulls:
                 conn.execute(
                     text(
                         """
-                    INSERT INTO test_users (id, email, user_id, isrc) VALUES 
+                    INSERT INTO test_users (id, email, user_id, isrc) VALUES
                     (1, 'user1@test.com', 100, 'USRC123'),
                     (2, NULL, 101, 'USRC456'),
                     (3, 'user3@test.com', NULL, NULL),
@@ -131,7 +134,11 @@ class TestScanNulls:
 
         # Check that we found the expected null issues
         null_columns = {issue.column for issue in issues}
-        assert "email" in null_columns or "user_id" in null_columns or "isrc" in null_columns
+        assert (
+            "email" in null_columns
+            or "user_id" in null_columns
+            or "isrc" in null_columns
+        )
 
         # Verify issue structure
         for issue in issues:
@@ -264,13 +271,13 @@ class TestHealthCheck:
 
     def test_health_check_with_issues(self):
         """Test health check when issues exist."""
-        import tempfile
         import os
-        
+        import tempfile
+
         # Create temporary file database
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
             db_path = tmp.name
-        
+
         try:
             engine = create_engine(f"sqlite+pysqlite:///{db_path}")
 
@@ -291,7 +298,7 @@ class TestHealthCheck:
                 conn.execute(
                     text(
                         """
-                    INSERT INTO problematic_table VALUES 
+                    INSERT INTO problematic_table VALUES
                     (1, NULL, 'USRC123'),
                     (2, 101, NULL)
                 """
@@ -316,8 +323,12 @@ class TestHealthCheck:
         if len(report.issues_by_severity) > 1:
             severity_order = {"critical": 0, "warning": 1, "info": 2}
             for i in range(len(report.issues_by_severity) - 1):
-                current_severity = severity_order.get(report.issues_by_severity[i].severity, 3)
-                next_severity = severity_order.get(report.issues_by_severity[i + 1].severity, 3)
+                current_severity = severity_order.get(
+                    report.issues_by_severity[i].severity, 3
+                )
+                next_severity = severity_order.get(
+                    report.issues_by_severity[i + 1].severity, 3
+                )
                 assert current_severity <= next_severity
 
 
@@ -400,7 +411,9 @@ class TestHelperFunctions:
         with engine.begin() as conn:
             conn.execute(text("CREATE TABLE test_table (id INTEGER, email TEXT)"))
             conn.execute(
-                text("INSERT INTO test_table VALUES (1, 'test@example.com'), (2, NULL), (3, NULL)")
+                text(
+                    "INSERT INTO test_table VALUES (1, 'test@example.com'), (2, NULL), (3, NULL)"
+                )
             )
 
         null_count = _get_null_count(engine, "test_table", "email")
@@ -454,7 +467,9 @@ class TestErrorHandling:
         assert report.summary["critical"] > 0
 
         # Should have error issues
-        error_issues = [issue for issue in report.issues_by_severity if issue.issue_type == "error"]
+        error_issues = [
+            issue for issue in report.issues_by_severity if issue.issue_type == "error"
+        ]
         assert len(error_issues) > 0
 
 
@@ -463,13 +478,13 @@ class TestIntegration:
 
     def test_music_database_scenario(self):
         """Test with a realistic music database scenario."""
-        import tempfile
         import os
-        
+        import tempfile
+
         # Create temporary file database
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp:
             db_path = tmp.name
-        
+
         try:
             engine = create_engine(f"sqlite+pysqlite:///{db_path}")
 
@@ -505,7 +520,7 @@ class TestIntegration:
                 conn.execute(
                     text(
                         """
-                    INSERT INTO artists VALUES 
+                    INSERT INTO artists VALUES
                     (1, 'Artist 1', 'spotify123'),
                     (2, 'Artist 2', NULL),
                     (3, 'Artist 3', 'spotify456')
@@ -516,7 +531,7 @@ class TestIntegration:
                 conn.execute(
                     text(
                         """
-                    INSERT INTO songs VALUES 
+                    INSERT INTO songs VALUES
                     (1, 'Song 1', 1, 'USRC123', 'track123'),
                     (2, 'Song 2', 2, NULL, 'track456'),
                     (3, 'Song 3', NULL, 'USRC789', NULL),
@@ -537,12 +552,16 @@ class TestIntegration:
         assert report.total_issues > 0
 
         # Should find null issues
-        null_issues = [issue for issue in report.issues_by_severity if issue.issue_type == "nulls"]
+        null_issues = [
+            issue for issue in report.issues_by_severity if issue.issue_type == "nulls"
+        ]
         assert len(null_issues) > 0
 
         # Should find duplicate issues
         duplicate_issues = [
-            issue for issue in report.issues_by_severity if issue.issue_type == "duplicates"
+            issue
+            for issue in report.issues_by_severity
+            if issue.issue_type == "duplicates"
         ]
         assert len(duplicate_issues) > 0
 

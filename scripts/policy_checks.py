@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-# Copyright (c) 2024 MusicScope
+# Copyright (c) 2025 Perday CatalogLAB™
 
 import sys
 from pathlib import Path
@@ -25,9 +25,9 @@ def scan(paths: Iterable[str]) -> List[str]:
             except Exception:
                 continue
             if EM_DASH in text:
-                violations.append(f"em-dash-found: {f}")
+                violations.append(f"em - dash - found: {f}")
             if has_unsafe_sql_in_fstring(text):
-                violations.append(f"unsafe-sql-fstring: {f}")
+                violations.append(f"unsafe - sql - fstring: {f}")
     return violations
 
 

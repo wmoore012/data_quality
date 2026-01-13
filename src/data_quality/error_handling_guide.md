@@ -23,12 +23,12 @@ def process_data(data: Dict[str, Any], timeout: int = 30) -> Result:
     # Validate inputs with clear error messages
     if not isinstance(data, dict):
         raise ValidationError(
-            "data", 
-            data, 
+            "data",
+            data,
             "dictionary",
             "Provide data as a dictionary with required fields"
         )
-    
+
     if timeout <= 0:
         raise ValidationError(
             "timeout",
@@ -99,6 +99,6 @@ def enhanced_scan(table: str, use_ai: bool = True) -> ScanResult:
             return ai_enhanced_scan(table)
     except AIServiceError as e:
         logger.warning(f"AI service unavailable, falling back to basic scan: {e}")
-    
+
     return basic_scan(table)
 ```

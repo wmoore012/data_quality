@@ -1,3 +1,42 @@
+Metadata-Version: 2.4
+Name: data-quality
+Version: 1.0.0
+Summary: Comprehensive data quality monitoring and validation
+Author-email: Wilton Moore <wilton@perdaylabs.com>
+License: MIT
+Project-URL: Homepage, https://github.com/wmoore012/data_quality
+Project-URL: Repository, https://github.com/wmoore012/data_quality
+Project-URL: Documentation, https://github.com/wmoore012/data_quality/blob/main/README.md
+Project-URL: Bug Tracker, https://github.com/wmoore012/data_quality/issues
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pandas>=1.5.0
+Requires-Dist: sqlalchemy>=2.0.0
+Requires-Dist: pydantic>=2.0.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
+Requires-Dist: black>=23.0.0; extra == "dev"
+Requires-Dist: ruff>=0.1.0; extra == "dev"
+Requires-Dist: mypy>=1.0.0; extra == "dev"
+Requires-Dist: pre-commit>=3.0.0; extra == "dev"
+Provides-Extra: benchmark
+Requires-Dist: pytest-benchmark>=4.0.0; extra == "benchmark"
+Requires-Dist: memory-profiler>=0.60.0; extra == "benchmark"
+Dynamic: license-file
+
 # Data Quality
 
 [![CI](https://github.com/wmoore012/data_quality/actions/workflows/ci.yml/badge.svg)](https://github.com/wmoore012/data_quality/actions/workflows/ci.yml)

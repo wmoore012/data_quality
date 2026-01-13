@@ -18,7 +18,7 @@ mysql -u user -p icatalog_public < sql/create_tables.sql
 ### Module-Specific Tables
 
 - **`data_quality_rules`** - Validation rules configuration
-- **`data_quality_results`** - Scan results and issue tracking  
+- **`data_quality_results`** - Scan results and issue tracking
 - **`data_quality_thresholds`** - Quality metric thresholds
 
 ### Shared Infrastructure Tables
@@ -59,7 +59,7 @@ INSERT INTO data_quality_rules (
     rule_id, rule_name, table_name, rule_type, severity, sql_check
 ) VALUES (
     'null_check_artist_name',
-    'Artist Name Null Check', 
+    'Artist Name Null Check',
     'artists',
     'nulls',
     'critical',
