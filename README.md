@@ -5,6 +5,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/wmoore012/data_quality/blob/main/LICENSE)
 
 > **Built for [Perday CatalogLAB](https://perdaycatalog.com)** - a data story platform for music producers and songwriters.
+>
+> [![CatalogLAB Data Story](docs/data_story.png)](https://perdaycatalog.com)
 
 Comprehensive data quality monitoring and validation for music analytics.
 
